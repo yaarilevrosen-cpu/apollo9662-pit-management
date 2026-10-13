@@ -1,9 +1,9 @@
 """
 בונה את שני קובצי ההדגמה העצמאיים (מחשב וטלפון) מתוך קוד האפליקציה.
 
-הנתונים בהדגמה בדויים לגמרי: מספרי קבוצות, תוצאות ונתונים סטטיסטיים
-נוצרים כאן באקראי עם זרע קבוע. אין בקובצי ההדגמה נתונים אמיתיים על קבוצות
-(החלטה 02, כלל ב').
+הנתונים בהדגמה בדויים לגמרי: מספרי קבוצות ותוצאות נוצרים כאן באקראי עם זרע
+קבוע. אין בקובצי ההדגמה נתונים אמיתיים על קבוצות (החלטה 02, כלל ב').
+אין בהם גם את הקישור לאפליקציית הסקאוטינג: הכפתור מוצג כלא פעיל.
 
 הרצה מתיקיית המאגר:
     python3 tools/build-demos.py
@@ -24,32 +24,6 @@ rng = random.Random(9662)
 others = [90101 + i for i in range(23)]
 teams = [TEAM] + others
 
-
-def team_stats():
-    auto = round(rng.uniform(8, 40), 1)
-    teleop = round(rng.uniform(25, 110), 1)
-    return auto, teleop
-
-
-stats = {}
-for n in teams:
-    auto, teleop = team_stats()
-    if n == TEAM:
-        auto, teleop = 21.4, 62.8
-    opr = round(auto + teleop + rng.uniform(-6, 6), 1)
-    stats[n] = {"auto": auto, "teleop": teleop, "opr": opr}
-
-order = sorted(teams, key=lambda n: -(stats[n]["opr"] + rng.uniform(-15, 15)))
-event_teams = []
-for rank, n in enumerate(order, 1):
-    wins = max(0, min(6, round(6 - rank / 4 + rng.uniform(-1, 1))))
-    ties = 1 if rng.random() < 0.08 else 0
-    losses = max(0, 6 - wins - ties)
-    event_teams.append({
-        "number": n, "rank": rank, "wins": wins, "losses": losses, "ties": ties,
-        "opr": stats[n]["opr"], "auto": stats[n]["auto"], "teleop": stats[n]["teleop"],
-        "avg": round(stats[n]["opr"] * 1.8 + rng.uniform(-10, 10), 1),
-    })
 
 # המשחקים שלנו: שניים שוחקו, השאר בהמשך
 labels = ["מ׳3", "מ׳8", "מ׳12", "מ׳17", "מ׳21", "מ׳26", "פ׳2", "פ׳3", "פ׳5"]
@@ -84,7 +58,7 @@ base = {
     "team": TEAM, "season": 2025, "demo": False,
     "event": {"code": "DEMO", "name": "אירוע הדגמה", "start": "", "end": "", "venue": "", "city": "עיר לדוגמה", "fields": 2},
     "error": "", "updatedAt": 0, "totalMatches": 52, "playedMatches": 6,
-    "ours": ours, "next": nxt, "playingNow": False, "eventTeams": event_teams,
+    "ours": ours, "next": nxt, "playingNow": False, "scoutingUrl": "",
     "checklist": [{"text": t, "done": i < 2} for i, t in enumerate(checklist_texts)],
     "batteries": [
         {"id": "b1", "name": "סוללה 1", "status": "ready", "voltage": 13.4, "uses": 3},
@@ -119,23 +93,6 @@ laptop["messages"] = [
 laptop["settings"] = {"team": TEAM, "season": None, "eventCode": "", "joinCode": "482913", "queueWarnAt": 2, "demo": False, "checklist": checklist_texts}
 laptop["adminKey"] = "demo-key"
 laptop["addresses"] = ["http://192.168.1.20:8765"]
-count = 8000
-team_info = {}
-for t in event_teams:
-    n = t["number"]
-    s = stats[n]
-    eg = round(rng.uniform(2, 14), 1)
-    team_info[str(n)] = {
-        "info": {"number": n, "name": "Apollo" if n == TEAM else "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": rng.randint(2015, 2024)},
-        "quick": {
-            "tot": {"value": s["opr"] + eg, "rank": rng.randint(50, count)},
-            "auto": {"value": s["auto"], "rank": rng.randint(50, count)},
-            "dc": {"value": s["teleop"], "rank": rng.randint(50, count)},
-            "eg": {"value": eg, "rank": rng.randint(50, count)},
-            "count": count,
-        },
-    }
-laptop["_teams"] = team_info
 
 # ---------- אריזה לקובץ יחיד ----------
 css = (PUBLIC / "common.css").read_text()

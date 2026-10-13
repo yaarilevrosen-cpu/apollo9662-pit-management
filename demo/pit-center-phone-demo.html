@@ -76,7 +76,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 
 /* קבוצות במשחק */
 .teams { display: flex; gap: 6px; flex-wrap: wrap; }
-.tn { font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; direction: ltr; }
+.tn { font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 6px; font-weight: 600; direction: ltr; }
 .tn.red { background: var(--red-soft); color: #ffb3bb; }
 .tn.blue { background: var(--blue-soft); color: #a9cbff; }
 .tn.me { outline: 2px solid var(--accent); }
@@ -100,6 +100,13 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 }
 .toast.show { opacity: 1; }
 
+/* לשונית הסקאוטינג: כפתור לאפליקציה של 04 */
+.scout-panel { display: grid; gap: 12px; justify-items: start; }
+.scout-go { display: inline-block; padding: 14px 22px; border-radius: 12px; font-size: 18px; font-weight: 700; text-decoration: none; }
+.scout-go.primary { background: var(--accent); color: var(--accent-ink); }
+.scout-go.off { background: var(--panel-2); color: var(--muted); border: 1px dashed var(--line); cursor: not-allowed; }
+.scout-panel p { margin: 0; max-width: 60ch; }
+
 </style>
 <style>
   body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
@@ -112,12 +119,6 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
   #title { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .quick { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
   .quick button { white-space: nowrap; border-radius: 99px; padding: 6px 12px; font-size: 14px; }
-  .sorts { display: flex; gap: 6px; margin-bottom: 8px; overflow-x: auto; }
-  .sorts button { white-space: nowrap; border-radius: 99px; padding: 5px 12px; font-size: 13px; }
-  .sorts button.on { border-color: var(--accent); color: var(--accent); }
-  .srow .rk { width: 26px; color: var(--muted); }
-  .srow .val { margin-inline-start: auto; font-weight: 700; }
-  .srow.us { background: #ffb02014; border-radius: 8px; padding-inline: 6px; }
   nav { position: fixed; bottom: 0; inset-inline: 0; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--panel); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
   nav button { border: 0; border-radius: 0; background: none; padding: 10px 4px 12px; display: grid; gap: 2px; justify-items: center; font-size: 13px; color: var(--muted); position: relative; }
   nav button span { font-size: 22px; }
@@ -195,9 +196,8 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 
     <section data-tab="scout" hidden>
       <div class="panel">
-        <h2><span class="grow">קבוצות באירוע</span></h2>
-        <div class="sorts" id="sorts"></div>
-        <ul class="list" id="scout"></ul>
+        <h2>סקאוטינג</h2>
+        <div class="scout-panel" id="scoutPanel"></div>
       </div>
     </section>
 
@@ -291,7 +291,18 @@ const Pit = (() => {
   const fixed = (v, n = 1) => (v == null ? '—' : Number(v).toFixed(n));
 
   function teamsHtml(list, color, me) {
-    return list.map((n) => `<span class="tn ${color} ${n === me ? 'me' : ''}" data-team="${n}">${n}</span>`).join('');
+    return list.map((n) => `<span class="tn ${color} ${n === me ? 'me' : ''}">${n}</span>`).join('');
+  }
+  // לשונית הסקאוטינג: רק כפתור שפותח את אפליקציית הסקאוטינג של פרויקט 04 (החלטה 01, שלב א).
+  // הקישור מגיע מהקובץ המקומי config.local.json, לא מהקוד.
+  function scoutHtml(url) {
+    const ok = /^https:\/\//.test(url || '');
+    const btn = ok
+      ? `<a class="scout-go primary" href="${esc(url)}" target="_blank" rel="noopener noreferrer">פתח את הסקאוטינג ↗</a>`
+      : '<span class="scout-go off" aria-disabled="true">הקישור לא הוגדר</span>';
+    return `${btn}
+      <p class="muted">נתוני הסקאוטינג נאספים ומעובדים באפליקציה של צוות הסקאוטינג. היא נפתחת בלשונית חדשה, וצריך להיות מחוברים עם חשבון שקיבל הרשאה.</p>
+      ${ok ? '' : '<p class="muted">כדי להפעיל: לשים את הקישור בקובץ config.local.json ליד server.js. ההסבר בקובץ ההוראות.</p>'}`;
   }
   function awayText(n) {
     if (n === 0) return 'על המגרש עכשיו';
@@ -336,14 +347,14 @@ const Pit = (() => {
     clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
   }
 
-  return { api, stream, esc, time, ago, colorName, fixed, teamsHtml, awayText, unlockAudio, beep, alarm, toast, setToken, get token() { return token; } };
+  return { api, stream, esc, time, ago, colorName, fixed, teamsHtml, awayText, scoutHtml, unlockAudio, beep, alarm, toast, setToken, get token() { return token; } };
 })();
 
 </script>
 <script>
 // ===== מצב הדגמה: אין שרת, הכול קורה בתוך הקובץ =====
 (() => {
-  const D = {"team": 9662, "season": 2025, "demo": false, "event": {"code": "DEMO", "name": "אירוע הדגמה", "start": "", "end": "", "venue": "", "city": "עיר לדוגמה", "fields": 2}, "error": "", "updatedAt": 0, "totalMatches": 52, "playedMatches": 6, "ours": [{"key": "m0", "label": "מ׳3", "level": "Quals", "color": "red", "station": 1, "partners": [90116], "opponents": [90114, 90112], "time": null, "played": true, "our": 112, "their": 126, "result": "L", "away": null}, {"key": "m1", "label": "מ׳8", "level": "Quals", "color": "blue", "station": 2, "partners": [90116], "opponents": [90102, 90112], "time": null, "played": true, "our": 148, "their": 131, "result": "W", "away": null}, {"key": "m2", "label": "מ׳12", "level": "Quals", "color": "blue", "station": 1, "partners": [90109], "opponents": [90105, 90121], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 4}, {"key": "m3", "label": "מ׳17", "level": "Quals", "color": "red", "station": 1, "partners": [90119], "opponents": [90118, 90103], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 8}, {"key": "m4", "label": "מ׳21", "level": "Quals", "color": "red", "station": 1, "partners": [90114], "opponents": [90118, 90116], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 11}, {"key": "m5", "label": "מ׳26", "level": "Quals", "color": "blue", "station": 1, "partners": [90106], "opponents": [90104, 90121], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 15}, {"key": "m6", "label": "פ׳2", "level": "DoubleElim", "color": "red", "station": 1, "partners": [90105], "opponents": [90123, 90122], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 18}, {"key": "m7", "label": "פ׳3", "level": "DoubleElim", "color": "red", "station": 1, "partners": [90111], "opponents": [90101, 90122], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 19}, {"key": "m8", "label": "פ׳5", "level": "DoubleElim", "color": "red", "station": 1, "partners": [90119], "opponents": [90106, 90110], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 21}], "next": {"key": "m2", "label": "מ׳12", "level": "Quals", "color": "blue", "station": 1, "partners": [90109], "opponents": [90105, 90121], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 4}, "playingNow": false, "eventTeams": [{"number": 90110, "rank": 1, "wins": 5, "losses": 0, "ties": 1, "opr": 138.9, "auto": 32.5, "teleop": 107.9, "avg": 256.0}, {"number": 90119, "rank": 2, "wins": 5, "losses": 1, "ties": 0, "opr": 138.8, "auto": 36.8, "teleop": 103.1, "avg": 242.5}, {"number": 90114, "rank": 3, "wins": 4, "losses": 2, "ties": 0, "opr": 123.9, "auto": 18.6, "teleop": 102.4, "avg": 214.5}, {"number": 90121, "rank": 4, "wins": 6, "losses": 0, "ties": 0, "opr": 119.0, "auto": 25.6, "teleop": 93.6, "avg": 223.2}, {"number": 90113, "rank": 5, "wins": 5, "losses": 1, "ties": 0, "opr": 111.9, "auto": 21.2, "teleop": 88.0, "avg": 192.3}, {"number": 90112, "rank": 6, "wins": 4, "losses": 2, "ties": 0, "opr": 108.5, "auto": 30.6, "teleop": 72.3, "avg": 203.8}, {"number": 90102, "rank": 7, "wins": 4, "losses": 2, "ties": 0, "opr": 101.2, "auto": 28.7, "teleop": 66.7, "avg": 185.5}, {"number": 90101, "rank": 8, "wins": 5, "losses": 1, "ties": 0, "opr": 102.5, "auto": 34.3, "teleop": 73.8, "avg": 177.7}, {"number": 90107, "rank": 9, "wins": 3, "losses": 3, "ties": 0, "opr": 110.2, "auto": 34.9, "teleop": 71.8, "avg": 189.5}, {"number": 90109, "rank": 10, "wins": 3, "losses": 3, "ties": 0, "opr": 108.0, "auto": 10.4, "teleop": 99.4, "avg": 197.2}, {"number": 90106, "rank": 11, "wins": 4, "losses": 2, "ties": 0, "opr": 108.7, "auto": 36.3, "teleop": 69.6, "avg": 199.4}, {"number": 90103, "rank": 12, "wins": 4, "losses": 2, "ties": 0, "opr": 85.0, "auto": 27.0, "teleop": 63.3, "avg": 157.8}, {"number": 90116, "rank": 13, "wins": 2, "losses": 4, "ties": 0, "opr": 85.6, "auto": 39.3, "teleop": 46.2, "avg": 159.4}, {"number": 9662, "rank": 14, "wins": 3, "losses": 3, "ties": 0, "opr": 79.3, "auto": 21.4, "teleop": 62.8, "avg": 143.0}, {"number": 90104, "rank": 15, "wins": 2, "losses": 4, "ties": 0, "opr": 86.8, "auto": 12.5, "teleop": 78.3, "avg": 155.9}, {"number": 90123, "rank": 16, "wins": 2, "losses": 4, "ties": 0, "opr": 78.0, "auto": 38.1, "teleop": 34.3, "avg": 133.9}, {"number": 90120, "rank": 17, "wins": 2, "losses": 3, "ties": 1, "opr": 55.6, "auto": 10.1, "teleop": 40.5, "avg": 98.6}, {"number": 90118, "rank": 18, "wins": 2, "losses": 4, "ties": 0, "opr": 61.9, "auto": 38.5, "teleop": 28.0, "avg": 111.5}, {"number": 90115, "rank": 19, "wins": 1, "losses": 5, "ties": 0, "opr": 65.0, "auto": 8.9, "teleop": 59.9, "avg": 118.3}, {"number": 90108, "rank": 20, "wins": 1, "losses": 5, "ties": 0, "opr": 61.8, "auto": 10.6, "teleop": 55.3, "avg": 118.9}, {"number": 90105, "rank": 21, "wins": 0, "losses": 6, "ties": 0, "opr": 63.8, "auto": 12.2, "teleop": 55.2, "avg": 114.0}, {"number": 90117, "rank": 22, "wins": 0, "losses": 6, "ties": 0, "opr": 52.1, "auto": 23.6, "teleop": 26.5, "avg": 100.1}, {"number": 90111, "rank": 23, "wins": 0, "losses": 6, "ties": 0, "opr": 52.7, "auto": 9.3, "teleop": 45.8, "avg": 101.0}, {"number": 90122, "rank": 24, "wins": 0, "losses": 6, "ties": 0, "opr": 49.9, "auto": 10.2, "teleop": 34.4, "avg": 88.0}], "checklist": [{"text": "סוללה טעונה ומחוברת", "done": true}, {"text": "רכזת הנהג טעונה ומחוברת לרובוט", "done": true}, {"text": "שלטים מחוברים ומשויכים", "done": false}, {"text": "נבחרה תוכנית אוטונומית נכונה", "done": false}, {"text": "ברגים ומחברים נבדקו", "done": false}, {"text": "סימון הברית על הרובוט", "done": false}], "batteries": [{"id": "b1", "name": "סוללה 1", "status": "ready", "voltage": 13.4, "uses": 3}, {"id": "b2", "name": "סוללה 2", "status": "robot", "voltage": 12.9, "uses": 4}, {"id": "b3", "name": "סוללה 3", "status": "charging", "voltage": null, "uses": 1}, {"id": "b4", "name": "סוללה 4", "status": "used", "voltage": 12.1, "uses": 5}], "repairs": [{"id": "r1", "text": "להחליף גלגל שמאלי קדמי", "by": "הפיט", "at": 0, "done": false}, {"id": "r2", "text": "להדק את הברגים של הזרוע", "by": "חבר צוות", "at": 0, "done": true}], "me": {"id": "me", "name": "", "alert": {"state": "none"}}, "messages": [{"id": "m1", "from": "pit", "to": "all", "text": "כולם לחזור לפיט אחרי המשחק, יש שינוי באוטונומי", "at": 0, "readBy": []}]};
+  const D = {"team": 9662, "season": 2025, "demo": false, "event": {"code": "DEMO", "name": "אירוע הדגמה", "start": "", "end": "", "venue": "", "city": "עיר לדוגמה", "fields": 2}, "error": "", "updatedAt": 0, "totalMatches": 52, "playedMatches": 6, "ours": [{"key": "m0", "label": "מ׳3", "level": "Quals", "color": "red", "station": 1, "partners": [90118], "opponents": [90116, 90119], "time": null, "played": true, "our": 112, "their": 126, "result": "L", "away": null}, {"key": "m1", "label": "מ׳8", "level": "Quals", "color": "blue", "station": 2, "partners": [90101], "opponents": [90119, 90102], "time": null, "played": true, "our": 148, "their": 131, "result": "W", "away": null}, {"key": "m2", "label": "מ׳12", "level": "Quals", "color": "blue", "station": 2, "partners": [90122], "opponents": [90109, 90119], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 4}, {"key": "m3", "label": "מ׳17", "level": "Quals", "color": "red", "station": 1, "partners": [90114], "opponents": [90102, 90108], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 8}, {"key": "m4", "label": "מ׳21", "level": "Quals", "color": "red", "station": 2, "partners": [90121], "opponents": [90101, 90106], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 11}, {"key": "m5", "label": "מ׳26", "level": "Quals", "color": "blue", "station": 2, "partners": [90112], "opponents": [90121, 90107], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 15}, {"key": "m6", "label": "פ׳2", "level": "DoubleElim", "color": "blue", "station": 2, "partners": [90107], "opponents": [90118, 90103], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 18}, {"key": "m7", "label": "פ׳3", "level": "DoubleElim", "color": "blue", "station": 1, "partners": [90105], "opponents": [90115, 90103], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 19}, {"key": "m8", "label": "פ׳5", "level": "DoubleElim", "color": "red", "station": 1, "partners": [90118], "opponents": [90113, 90102], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 21}], "next": {"key": "m2", "label": "מ׳12", "level": "Quals", "color": "blue", "station": 2, "partners": [90122], "opponents": [90109, 90119], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 4}, "playingNow": false, "scoutingUrl": "", "checklist": [{"text": "סוללה טעונה ומחוברת", "done": true}, {"text": "רכזת הנהג טעונה ומחוברת לרובוט", "done": true}, {"text": "שלטים מחוברים ומשויכים", "done": false}, {"text": "נבחרה תוכנית אוטונומית נכונה", "done": false}, {"text": "ברגים ומחברים נבדקו", "done": false}, {"text": "סימון הברית על הרובוט", "done": false}], "batteries": [{"id": "b1", "name": "סוללה 1", "status": "ready", "voltage": 13.4, "uses": 3}, {"id": "b2", "name": "סוללה 2", "status": "robot", "voltage": 12.9, "uses": 4}, {"id": "b3", "name": "סוללה 3", "status": "charging", "voltage": null, "uses": 1}, {"id": "b4", "name": "סוללה 4", "status": "used", "voltage": 12.1, "uses": 5}], "repairs": [{"id": "r1", "text": "להחליף גלגל שמאלי קדמי", "by": "הפיט", "at": 0, "done": false}, {"id": "r2", "text": "להדק את הברגים של הזרוע", "by": "חבר צוות", "at": 0, "done": true}], "me": {"id": "me", "name": "", "alert": {"state": "none"}}, "messages": [{"id": "m1", "from": "pit", "to": "all", "text": "כולם לחזור לפיט אחרי המשחק, יש שינוי באוטונומי", "at": 0, "readBy": []}]};
   const now = Date.now();
   // מזיזים את הזמנים כך שייראו עדכניים
   D.messages.forEach((m, i) => (m.at = now - (D.messages.length - i) * 4 * 60000));
@@ -553,18 +564,9 @@ function render() {
   if (S.me.alert?.state !== 'ringing' && ringing) ring(false);
 }
 
-// ---------- סקאוטינג ----------
-const SORTS = [['opr', 'תרומה משוערת', -1], ['rank', 'דירוג', 1], ['auto', 'אוטונומי', -1], ['teleop', 'שליטה ידנית', -1]];
-let sortKey = 'opr', sortDir = -1;
+// ---------- סקאוטינג: כפתור לאפליקציה של 04 ----------
 function renderScout() {
-  $('#sorts').innerHTML = SORTS.map(([k, t]) => `<button data-sort="${k}" class="${k === sortKey ? 'on' : ''}">${t}${k === sortKey ? (sortDir > 0 ? ' ▲' : ' ▼') : ''}</button>`).join('');
-  const none = sortDir > 0 ? Infinity : -Infinity;
-  const rows = [...(S.eventTeams || [])].sort((a, b) => ((a[sortKey] ?? none) - (b[sortKey] ?? none)) * sortDir);
-  $('#scout').innerHTML = rows.map((t, i) => `
-    <li class="srow ${t.number === S.team ? 'us' : ''}"><span class="rk num">${i + 1}</span>
-      <span class="tn" data-team="${t.number}">${t.number}</span>
-      <small class="muted num">${t.wins}-${t.losses}-${t.ties}</small>
-      <span class="val num">${Pit.fixed(t[sortKey], sortKey === 'rank' ? 0 : 1)}</span></li>`).join('') || '<li class="empty">אין עדיין נתונים לאירוע</li>';
+  $('#scoutPanel').innerHTML = Pit.scoutHtml(S.scoutingUrl);
 }
 
 // ---------- צלצול ----------
@@ -618,13 +620,8 @@ $('#logout').onclick = () => { Pit.setToken(null); showJoin(); };
 // ---------- פעולות ----------
 document.addEventListener('click', (e) => {
   Pit.unlockAudio();
-  const t = e.target.closest('[data-go],[data-i],[data-repair],[data-sort],[data-quick]');
+  const t = e.target.closest('[data-go],[data-i],[data-repair],[data-quick]');
   if (!t) return;
-  if (t.dataset.sort) {
-    const def = SORTS.find((s) => s[0] === t.dataset.sort)[2];
-    sortDir = sortKey === t.dataset.sort ? -sortDir : def; sortKey = t.dataset.sort;
-    return renderScout();
-  }
   if (t.dataset.quick) { api('/api/message', { text: t.dataset.quick }).then(load); Pit.toast('נשלח'); return; }
   if (t.dataset.go) {
     tab = t.dataset.go;

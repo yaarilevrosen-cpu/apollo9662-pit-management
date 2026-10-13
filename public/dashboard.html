@@ -80,15 +80,6 @@
   .bcard:hover .x { opacity: 1; }
   .suggest { font-size: 14px; margin-bottom: 10px; }
 
-  /* סקאוטינג */
-  .scout { width: 100%; border-collapse: collapse; }
-  .scout th { cursor: pointer; color: var(--muted); font-weight: 500; font-size: 13px; text-align: start; padding: 10px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; position: sticky; top: 64px; background: var(--bg); }
-  .scout th.on { color: var(--accent); }
-  .scout td { padding: 9px 8px; border-bottom: 1px solid var(--line); }
-  .scout tr.us td { background: #ffb02014; }
-  .scout tr.partner td { background: #3d8bff12; }
-  .meter { display: inline-block; height: 6px; background: var(--accent); border-radius: 99px; vertical-align: middle; margin-inline-start: 8px; opacity: .7; }
-
   /* חלונות */
   dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 18px; padding: 0; width: min(760px, 94vw); }
   dialog::backdrop { background: #000a; }
@@ -101,10 +92,6 @@
   #qr { background: #fff; padding: 8px; border-radius: 10px; width: 176px; height: 176px; }
   #qr img, #qr canvas { width: 160px !important; height: 160px !important; }
   .code { font-size: 34px; font-weight: 800; letter-spacing: .12em; direction: ltr; }
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  .stat { background: var(--panel-2); border-radius: 12px; padding: 12px; text-align: center; }
-  .stat b { display: block; font-size: 24px; }
-  .stat small { color: var(--muted); }
   .overlay.queue { background: #2a1b00; }
   .overlay.queue h1 { color: var(--accent); }
   .overlay.queue button { background: var(--accent); color: var(--accent-ink); }
@@ -181,8 +168,8 @@
 
   <section id="view-scout" hidden>
     <div class="panel">
-      <h2><span class="grow">כל הקבוצות באירוע</span><span class="muted">לחיצה על קבוצה פותחת נתוני עונה · נתונים מאתר FTCScout</span></h2>
-      <table class="scout"><thead><tr id="scoutHead"></tr></thead><tbody id="scoutBody"></tbody></table>
+      <h2>סקאוטינג</h2>
+      <div class="scout-panel" id="scoutPanel"></div>
     </div>
   </section>
 </main>
@@ -228,18 +215,12 @@
   </div>
 </dialog>
 
-<dialog id="teamDlg">
-  <div class="head"><h3 id="tdTitle"></h3><button class="ghost" data-close>✕</button></div>
-  <div class="body" id="tdBody"></div>
-</dialog>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="common.js"></script>
 <script>
-const { api, esc, time, ago, colorName, fixed, teamsHtml, awayText } = Pit;
+const { api, esc, time, ago, colorName, fixed, teamsHtml, awayText, scoutHtml } = Pit;
 const $ = (s) => document.querySelector(s);
 let S = null;
-let scoutSort = { key: 'opr', dir: -1 };
 let warnedKey = null;
 
 // ---------- טעינה ----------
@@ -368,53 +349,9 @@ function renderRepairs() {
       <button class="ghost" data-rdel="${r.id}" title="מחק">✕</button></li>`).join('') || '<li class="empty">אין תיקונים פתוחים</li>';
 }
 
-// ---------- סקאוטינג ----------
-const COLS = [
-  ['rank', 'דירוג', 1], ['number', 'קבוצה', 1], ['record', 'נ-ה-ת', 0], ['opr', 'תרומה משוערת', -1],
-  ['auto', 'אוטונומי', -1], ['teleop', 'שליטה ידנית', -1], ['avg', 'ממוצע ברית', -1],
-];
+// ---------- סקאוטינג: כפתור לאפליקציה של 04 ----------
 function renderScout() {
-  $('#scoutHead').innerHTML = COLS.map(([k, t]) => `<th data-sort="${k}" class="${scoutSort.key === k ? 'on' : ''}">${t}${scoutSort.key === k ? (scoutSort.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('');
-  const partners = new Set(S.ours.flatMap((m) => m.partners));
-  const max = Math.max(1, ...S.eventTeams.map((t) => t.opr || 0));
-  const rows = [...S.eventTeams].sort((a, b) => {
-    const k = scoutSort.key; if (k === 'record') return 0;
-    const av = a[k] ?? (scoutSort.dir > 0 ? Infinity : -Infinity), bv = b[k] ?? (scoutSort.dir > 0 ? Infinity : -Infinity);
-    return (av - bv) * scoutSort.dir;
-  });
-  $('#scoutBody').innerHTML = rows.map((t) => `
-    <tr class="${t.number === S.team ? 'us' : partners.has(t.number) ? 'partner' : ''}">
-      <td class="num">${t.rank ?? '—'}</td>
-      <td><span class="tn" data-team="${t.number}">${t.number}</span></td>
-      <td class="num">${t.wins}-${t.losses}-${t.ties}</td>
-      <td><span class="num">${fixed(t.opr)}</span><span class="meter" style="width:${((t.opr || 0) / max) * 80}px"></span></td>
-      <td class="num">${fixed(t.auto)}</td><td class="num">${fixed(t.teleop)}</td><td class="num">${fixed(t.avg)}</td>
-    </tr>`).join('') || '<tr><td colspan="7" class="empty">אין נתונים לאירוע הזה עדיין</td></tr>';
-}
-
-async function openTeam(n) {
-  $('#tdTitle').textContent = `קבוצה ${n}`;
-  $('#tdBody').innerHTML = '<div class="muted">טוען…</div>';
-  $('#teamDlg').showModal();
-  const ev = S.eventTeams?.find((t) => t.number === n);
-  try {
-    const d = await api(`/api/team/${n}`);
-    const q = d.quick;
-    if (d.info) $('#tdTitle').textContent = `${n} · ${d.info.name}`;
-    $('#tdBody').innerHTML = `
-      ${d.info ? `<div class="muted">${esc(d.info.city || '')}${d.info.rookieYear ? ` · מאז ${d.info.rookieYear}` : ''}</div>` : ''}
-      ${ev ? `<div><b>באירוע הזה</b></div><div class="stats">
-        <div class="stat"><b class="num">${ev.rank ?? '—'}</b><small>דירוג</small></div>
-        <div class="stat"><b class="num">${fixed(ev.opr)}</b><small>תרומה משוערת</small></div>
-        <div class="stat"><b class="num">${fixed(ev.auto)}</b><small>אוטונומי</small></div>
-        <div class="stat"><b class="num">${fixed(ev.teleop)}</b><small>שליטה ידנית</small></div></div>` : ''}
-      <div><b>כל העונה</b> <span class="muted">(מתוך ${q?.count ?? '—'} קבוצות בעולם)</span></div>
-      ${q ? `<div class="stats">
-        <div class="stat"><b class="num">${fixed(q.tot.value)}</b><small>סה״כ · מקום ${q.tot.rank}</small></div>
-        <div class="stat"><b class="num">${fixed(q.auto.value)}</b><small>אוטונומי · מקום ${q.auto.rank}</small></div>
-        <div class="stat"><b class="num">${fixed(q.dc.value)}</b><small>שליטה ידנית · מקום ${q.dc.rank}</small></div>
-        <div class="stat"><b class="num">${fixed(q.eg.value)}</b><small>סיום · מקום ${q.eg.rank}</small></div></div>` : '<div class="muted">אין עדיין נתוני עונה לקבוצה</div>'}`;
-  } catch { $('#tdBody').innerHTML = '<div class="muted">לא הצלחתי לטעון את נתוני הקבוצה</div>'; }
+  $('#scoutPanel').innerHTML = scoutHtml(S.scoutingUrl);
 }
 
 // ---------- התראת תור ----------
@@ -440,10 +377,9 @@ $('#queueOk').onclick = () => { $('#queueOverlay').classList.remove('show'); Pit
 // ---------- פעולות ----------
 document.addEventListener('click', async (e) => {
   Pit.unlockAudio();
-  const t = e.target.closest('[data-team],[data-i],[data-alert],[data-cancel],[data-del],[data-volt],[data-id],[data-repair],[data-rdel],[data-sort],[data-view],[data-close],[data-kick]');
+  const t = e.target.closest('[data-i],[data-alert],[data-cancel],[data-del],[data-volt],[data-id],[data-repair],[data-rdel],[data-view],[data-close],[data-kick]');
   if (!t) return;
   const d = t.dataset;
-  if (d.team) return openTeam(Number(d.team));
   if (d.close !== undefined) return t.closest('dialog').close();
   if (d.view) {
     document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b === t));
@@ -451,7 +387,6 @@ document.addEventListener('click', async (e) => {
     if (d.view === 'scout') renderScout();
     return;
   }
-  if (d.sort) { scoutSort = { key: d.sort, dir: scoutSort.key === d.sort ? -scoutSort.dir : (COLS.find((c) => c[0] === d.sort)[2] || -1) }; return renderScout(); }
   if (d.i !== undefined) { const c = S.checklist[d.i]; c.done = !c.done; renderChecklist(); return api('/api/check', { index: Number(d.i), done: c.done }); }
   if (d.alert) { Pit.toast('מצלצל בטלפון…'); return api('/api/alert', { id: d.alert, reason: $('#alertReason').value }).then(load); }
   if (d.cancel) return api('/api/alert/cancel', { id: d.cancel }).then(load);

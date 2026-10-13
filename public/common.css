@@ -66,7 +66,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 
 /* קבוצות במשחק */
 .teams { display: flex; gap: 6px; flex-wrap: wrap; }
-.tn { font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; direction: ltr; }
+.tn { font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 6px; font-weight: 600; direction: ltr; }
 .tn.red { background: var(--red-soft); color: #ffb3bb; }
 .tn.blue { background: var(--blue-soft); color: #a9cbff; }
 .tn.me { outline: 2px solid var(--accent); }
@@ -89,3 +89,10 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
   box-shadow: 0 10px 30px #0008; z-index: 60; opacity: 0; transition: opacity .2s; pointer-events: none;
 }
 .toast.show { opacity: 1; }
+
+/* לשונית הסקאוטינג: כפתור לאפליקציה של 04 */
+.scout-panel { display: grid; gap: 12px; justify-items: start; }
+.scout-go { display: inline-block; padding: 14px 22px; border-radius: 12px; font-size: 18px; font-weight: 700; text-decoration: none; }
+.scout-go.primary { background: var(--accent); color: var(--accent-ink); }
+.scout-go.off { background: var(--panel-2); color: var(--muted); border: 1px dashed var(--line); cursor: not-allowed; }
+.scout-panel p { margin: 0; max-width: 60ch; }

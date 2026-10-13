@@ -20,12 +20,6 @@
   #title { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .quick { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
   .quick button { white-space: nowrap; border-radius: 99px; padding: 6px 12px; font-size: 14px; }
-  .sorts { display: flex; gap: 6px; margin-bottom: 8px; overflow-x: auto; }
-  .sorts button { white-space: nowrap; border-radius: 99px; padding: 5px 12px; font-size: 13px; }
-  .sorts button.on { border-color: var(--accent); color: var(--accent); }
-  .srow .rk { width: 26px; color: var(--muted); }
-  .srow .val { margin-inline-start: auto; font-weight: 700; }
-  .srow.us { background: #ffb02014; border-radius: 8px; padding-inline: 6px; }
   nav { position: fixed; bottom: 0; inset-inline: 0; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--panel); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
   nav button { border: 0; border-radius: 0; background: none; padding: 10px 4px 12px; display: grid; gap: 2px; justify-items: center; font-size: 13px; color: var(--muted); position: relative; }
   nav button span { font-size: 22px; }
@@ -103,9 +97,8 @@
 
     <section data-tab="scout" hidden>
       <div class="panel">
-        <h2><span class="grow">קבוצות באירוע</span></h2>
-        <div class="sorts" id="sorts"></div>
-        <ul class="list" id="scout"></ul>
+        <h2>סקאוטינג</h2>
+        <div class="scout-panel" id="scoutPanel"></div>
       </div>
     </section>
 
@@ -246,18 +239,9 @@ function render() {
   if (S.me.alert?.state !== 'ringing' && ringing) ring(false);
 }
 
-// ---------- סקאוטינג ----------
-const SORTS = [['opr', 'תרומה משוערת', -1], ['rank', 'דירוג', 1], ['auto', 'אוטונומי', -1], ['teleop', 'שליטה ידנית', -1]];
-let sortKey = 'opr', sortDir = -1;
+// ---------- סקאוטינג: כפתור לאפליקציה של 04 ----------
 function renderScout() {
-  $('#sorts').innerHTML = SORTS.map(([k, t]) => `<button data-sort="${k}" class="${k === sortKey ? 'on' : ''}">${t}${k === sortKey ? (sortDir > 0 ? ' ▲' : ' ▼') : ''}</button>`).join('');
-  const none = sortDir > 0 ? Infinity : -Infinity;
-  const rows = [...(S.eventTeams || [])].sort((a, b) => ((a[sortKey] ?? none) - (b[sortKey] ?? none)) * sortDir);
-  $('#scout').innerHTML = rows.map((t, i) => `
-    <li class="srow ${t.number === S.team ? 'us' : ''}"><span class="rk num">${i + 1}</span>
-      <span class="tn" data-team="${t.number}">${t.number}</span>
-      <small class="muted num">${t.wins}-${t.losses}-${t.ties}</small>
-      <span class="val num">${Pit.fixed(t[sortKey], sortKey === 'rank' ? 0 : 1)}</span></li>`).join('') || '<li class="empty">אין עדיין נתונים לאירוע</li>';
+  $('#scoutPanel').innerHTML = Pit.scoutHtml(S.scoutingUrl);
 }
 
 // ---------- צלצול ----------
@@ -311,13 +295,8 @@ $('#logout').onclick = () => { Pit.setToken(null); showJoin(); };
 // ---------- פעולות ----------
 document.addEventListener('click', (e) => {
   Pit.unlockAudio();
-  const t = e.target.closest('[data-go],[data-i],[data-repair],[data-sort],[data-quick]');
+  const t = e.target.closest('[data-go],[data-i],[data-repair],[data-quick]');
   if (!t) return;
-  if (t.dataset.sort) {
-    const def = SORTS.find((s) => s[0] === t.dataset.sort)[2];
-    sortDir = sortKey === t.dataset.sort ? -sortDir : def; sortKey = t.dataset.sort;
-    return renderScout();
-  }
   if (t.dataset.quick) { api('/api/message', { text: t.dataset.quick }).then(load); Pit.toast('נשלח'); return; }
   if (t.dataset.go) {
     tab = t.dataset.go;

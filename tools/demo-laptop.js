@@ -1,7 +1,6 @@
 // ===== מצב הדגמה למסך הפיט: אין שרת, הכול קורה בתוך הקובץ =====
 (() => {
   const D = __DEMO_STATE__;
-  const TEAMS = D._teams; delete D._teams;
   const now = Date.now();
   D.messages.forEach((m, i) => (m.at = now - (D.messages.length - i) * 3 * 60000));
   D.repairs.forEach((r, i) => (r.at = now - (i + 1) * 11 * 60000));
@@ -57,8 +56,6 @@
   Pit.api = async (path, body) => {
     await new Promise((r) => setTimeout(r, 60));
     const p = path.split('?')[0];
-    const tm = p.match(/^\/api\/team\/(\d+)$/);
-    if (tm) return TEAMS[tm[1]] || { info: null, quick: null };
     if (p === '/api/state') return JSON.parse(JSON.stringify(D));
     if (p === '/api/check') {
       if (body.reset) D.checklist.forEach((c) => (c.done = false));
@@ -131,7 +128,7 @@
       <button data-d="msg">💬 חבר צוות שולח הודעה</button>
       <button data-d="join">📱 טלפון חדש מתחבר</button>
       <button data-d="toggle">🔌 איתי מתחבר או מתנתק</button>
-      <small>וגם: לחצו "קריאה" ליד חבר צוות, על מספר קבוצה, על סוללה, ועל לשונית הסקאוטינג</small>`;
+      <small>וגם: לחצו "קריאה" ליד חבר צוות ועל סוללה</small>`;
     document.body.append(fab, menu);
     fab.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('show'); };
     const names = ['רוני', 'מאיה', 'עידו', 'תמר', 'אורי'];

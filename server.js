@@ -11,6 +11,8 @@ const crypto = require('crypto');
 const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
 const DATA_FILE = path.join(ROOT, 'data.json');
+// הגדרות מקומיות שלא נכנסות למאגר (מוחרג ב־.gitignore)
+const LOCAL_CONFIG_FILE = path.join(ROOT, 'config.local.json');
 const PORT = Number(process.env.PORT) || 8765;
 const API = 'https://api.ftcscout.org/rest/v1';
 const REFRESH_MS = 45_000;
@@ -51,6 +53,29 @@ const DEFAULT_STATE = () => ({
   demoStartedAt: 0,
 });
 
+// ---------- הגדרות מקומיות ----------
+// הקישור לאפליקציית הסקאוטינג (04) נשמר רק כאן, כי המאגר ציבורי.
+// אם הקובץ חסר או שהקישור לא תקין, הכפתור מוצג כלא פעיל.
+let localConfig = { scoutingUrl: '' };
+let localConfigMtime = -1;
+function loadLocalConfig() {
+  let mtime = 0;
+  try { mtime = fs.statSync(LOCAL_CONFIG_FILE).mtimeMs; } catch { mtime = 0; }
+  if (mtime === localConfigMtime) return;
+  localConfigMtime = mtime;
+  localConfig = { scoutingUrl: '' };
+  if (!mtime) return;
+  try {
+    const c = JSON.parse(fs.readFileSync(LOCAL_CONFIG_FILE, 'utf8'));
+    const u = new URL(String(c.scoutingUrl || ''));
+    if (u.protocol === 'https:') localConfig.scoutingUrl = u.href;
+    else console.error('config.local.json: scoutingUrl חייב להתחיל ב־https');
+  } catch (e) {
+    console.error('config.local.json לא נקרא:', e.message);
+  }
+}
+loadLocalConfig();
+
 let state;
 try {
   state = Object.assign(DEFAULT_STATE(), JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')));
@@ -71,9 +96,8 @@ save();
 
 // ---------- נתוני תחרות ----------
 const cache = {
-  event: null, matches: [], teams: [], error: '', updatedAt: 0, season: null,
+  event: null, matches: [], error: '', updatedAt: 0, season: null,
 };
-const teamCache = new Map(); // מספר קבוצה -> {at, data}
 
 async function getJSON(url) {
   const r = await fetch(url, { headers: { accept: 'application/json' } });
@@ -117,15 +141,9 @@ async function refresh() {
     cache.event = event;
     cache.season = season;
     if (event) {
-      const [matches, teams] = await Promise.all([
-        getJSON(`${API}/events/${season}/${event.code}/matches`),
-        getJSON(`${API}/events/${season}/${event.code}/teams`),
-      ]);
-      cache.matches = matches;
-      cache.teams = teams;
+      cache.matches = await getJSON(`${API}/events/${season}/${event.code}/matches`);
     } else {
       cache.matches = [];
-      cache.teams = [];
     }
     cache.error = '';
     cache.updatedAt = Date.now();
@@ -196,15 +214,7 @@ function buildView() {
   });
 
   const next = ours.find((m) => !m.played) || null;
-  const eventTeams = cache.teams.map((t) => ({
-    number: t.teamNumber,
-    rank: t.stats?.rank ?? null,
-    wins: t.stats?.wins ?? 0, losses: t.stats?.losses ?? 0, ties: t.stats?.ties ?? 0,
-    opr: t.stats?.opr?.totalPointsNp ?? null,
-    auto: t.stats?.opr?.autoPoints ?? null,
-    teleop: t.stats?.opr?.dcPoints ?? null,
-    avg: t.stats?.avg?.totalPointsNp ?? null,
-  }));
+  loadLocalConfig();
 
   return {
     team,
@@ -220,7 +230,7 @@ function buildView() {
     playedMatches: Math.min(firstUnplayedIdx, sorted.length),
     ours, next,
     playingNow: !!(next && next.away === 0),
-    eventTeams,
+    scoutingUrl: localConfig.scoutingUrl,
   };
 }
 
@@ -509,19 +519,6 @@ const routes = {
   },
 };
 
-async function teamInfo(n, season) {
-  const key = `${n}-${season}`;
-  const hit = teamCache.get(key);
-  if (hit && Date.now() - hit.at < 10 * 60_000) return hit.data;
-  const [info, quick] = await Promise.all([
-    getJSON(`${API}/teams/${n}`).catch(() => null),
-    getJSON(`${API}/teams/${n}/quick-stats?season=${season}`).catch(() => null),
-  ]);
-  const data = { info, quick };
-  teamCache.set(key, { at: Date.now(), data });
-  return data;
-}
-
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   const a = auth(req, url);
@@ -539,12 +536,6 @@ const server = http.createServer(async (req, res) => {
     broadcast('change', {}, (x) => x.kind === 'admin');
     req.on('close', () => { clients.delete(c); broadcast('change', {}, (x) => x.kind === 'admin'); });
     return;
-  }
-
-  const m = url.pathname.match(/^\/api\/team\/(\d{1,6})$/);
-  if (req.method === 'GET' && m) {
-    if (!a.admin && !a.member) return send(res, 401, {});
-    return send(res, 200, await teamInfo(Number(m[1]), seasonInUse()));
   }
 
   const route = routes[`${req.method} ${url.pathname}`];
