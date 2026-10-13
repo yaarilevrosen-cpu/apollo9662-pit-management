@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K">
+<title>מרכז הפיט · הדגמה</title>
+<style>
+:root {
+  --bg: #0b0e14;
+  --panel: #131824;
+  --panel-2: #1a2131;
+  --line: #262f44;
+  --text: #e8ecf4;
+  --muted: #8b95ab;
+  --accent: #ffb020;
+  --accent-ink: #1a1200;
+  --red: #ff4d5e;
+  --red-soft: #3a1219;
+  --blue: #3d8bff;
+  --blue-soft: #0f2141;
+  --green: #2fd17a;
+  --green-soft: #0e2d1d;
+  --radius: 14px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body {
+  font-family: "Rubik", "Segoe UI", "Arial Hebrew", Arial, sans-serif;
+  font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased;
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+button {
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 8px 14px; cursor: pointer; transition: background .15s, border-color .15s, transform .05s;
+}
+button:hover { border-color: #3a4560; }
+button:active { transform: scale(.97); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button.danger { background: var(--red); border-color: var(--red); color: #fff; font-weight: 600; }
+button.ghost { background: transparent; }
+button:disabled { opacity: .5; cursor: default; }
+input, textarea, select {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; width: 100%;
+}
+input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+.num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; display: inline-block; }
+.muted { color: var(--muted); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.panel h2 { margin: 0 0 12px; font-size: 15px; font-weight: 600; color: var(--muted); letter-spacing: .02em; display: flex; align-items: center; gap: 8px; }
+.panel h2 .grow { flex: 1; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 99px; font-size: 13px; background: var(--panel-2); border: 1px solid var(--line); }
+.pill.red { background: var(--red-soft); border-color: #6b2230; color: #ffb3bb; }
+.pill.blue { background: var(--blue-soft); border-color: #23417a; color: #a9cbff; }
+.pill.green { background: var(--green-soft); border-color: #1d5a39; color: #8ff0bb; }
+.pill.amber { background: #3a2a07; border-color: #6e5110; color: #ffd27a; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.dot.on { background: var(--green); box-shadow: 0 0 0 3px #2fd17a33; }
+.row { display: flex; align-items: center; gap: 10px; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.list { list-style: none; margin: 0; padding: 0; }
+.list > li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.list > li:last-child { border-bottom: 0; }
+.empty { color: var(--muted); font-size: 14px; padding: 8px 0; }
+
+/* רשימת בדיקה */
+.check { cursor: pointer; user-select: none; }
+.check .box { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--line); flex: none; display: grid; place-items: center; }
+.check.done .box { background: var(--green); border-color: var(--green); }
+.check.done .box::after { content: ""; width: 10px; height: 6px; border: 2.5px solid #06210f; border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
+.check.done span { color: var(--muted); text-decoration: line-through; }
+
+/* קבוצות במשחק */
+.teams { display: flex; gap: 6px; flex-wrap: wrap; }
+.tn { font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; direction: ltr; }
+.tn.red { background: var(--red-soft); color: #ffb3bb; }
+.tn.blue { background: var(--blue-soft); color: #a9cbff; }
+.tn.me { outline: 2px solid var(--accent); }
+
+/* התראה במסך מלא */
+.overlay {
+  position: fixed; inset: 0; z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center;
+  gap: 24px; text-align: center; padding: 24px;
+}
+.overlay.show { display: flex; }
+.overlay.alarm { background: #c8102e; animation: flash 1s steps(2) infinite; }
+@keyframes flash { 50% { background: #8a0a1f; } }
+.overlay h1 { font-size: clamp(36px, 9vw, 96px); margin: 0; line-height: 1.05; }
+.overlay p { font-size: clamp(18px, 3vw, 28px); margin: 0; opacity: .9; }
+.overlay button { font-size: 22px; padding: 16px 32px; border-radius: 16px; background: #fff; color: #8a0a1f; border: 0; font-weight: 700; }
+
+.toast {
+  position: fixed; bottom: 20px; inset-inline-start: 50%; transform: translateX(50%);
+  background: var(--panel-2); border: 1px solid var(--line); padding: 10px 18px; border-radius: 12px;
+  box-shadow: 0 10px 30px #0008; z-index: 60; opacity: 0; transition: opacity .2s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+</style>
+<style>
+  body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 14px; }
+  .top { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 5; }
+  .top img { width: 28px; height: 28px; }
+  .top b { flex: 1; }
+  .composer { display: grid !important; grid-template-columns: 1fr !important; }
+  .toast { bottom: calc(90px + env(safe-area-inset-bottom)); }
+  #title { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .quick { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+  .quick button { white-space: nowrap; border-radius: 99px; padding: 6px 12px; font-size: 14px; }
+  .sorts { display: flex; gap: 6px; margin-bottom: 8px; overflow-x: auto; }
+  .sorts button { white-space: nowrap; border-radius: 99px; padding: 5px 12px; font-size: 13px; }
+  .sorts button.on { border-color: var(--accent); color: var(--accent); }
+  .srow .rk { width: 26px; color: var(--muted); }
+  .srow .val { margin-inline-start: auto; font-weight: 700; }
+  .srow.us { background: #ffb02014; border-radius: 8px; padding-inline: 6px; }
+  nav { position: fixed; bottom: 0; inset-inline: 0; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--panel); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
+  nav button { border: 0; border-radius: 0; background: none; padding: 10px 4px 12px; display: grid; gap: 2px; justify-items: center; font-size: 13px; color: var(--muted); position: relative; }
+  nav button span { font-size: 22px; }
+  nav button.on { color: var(--accent); }
+  nav .badge { position: absolute; top: 6px; inset-inline-end: 28%; background: var(--red); color: #fff; border-radius: 99px; font-size: 11px; min-width: 18px; padding: 0 5px; }
+  .card { border-radius: 18px; padding: 18px; border: 1px solid var(--line); background: var(--panel); margin-bottom: 12px; }
+  .card.red { background: radial-gradient(140% 140% at 100% 0%, #5a1520 0%, #1b0d12 65%); border-color: #6b2230; }
+  .card.blue { background: radial-gradient(140% 140% at 100% 0%, #123267 0%, #0b1424 65%); border-color: #23417a; }
+  .card .label { font-size: 56px; font-weight: 800; line-height: 1; }
+  .card .away { font-size: 20px; font-weight: 700; margin-top: 6px; }
+  .card.red .alli { color: #ff8a96; } .card.blue .alli { color: #8ab8ff; }
+  .sides { display: grid; gap: 8px; margin-top: 14px; }
+  .sides > div { background: #0005; border-radius: 12px; padding: 8px 10px; }
+  .sides small { color: var(--muted); display: block; margin-bottom: 4px; }
+  .msgs { display: flex; flex-direction: column; gap: 8px; min-height: 50vh; }
+  .msg { max-width: 85%; padding: 8px 12px; border-radius: 14px; background: var(--panel-2); align-self: flex-start; }
+  .msg.mine { align-self: flex-end; background: #2a2110; border: 1px solid #5a430f; }
+  .msg small { display: block; color: var(--muted); font-size: 12px; }
+  .composer { position: sticky; bottom: calc(76px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 10px 0; background: var(--bg); }
+  .bcard { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); margin-bottom: 8px; }
+  .bcard b { flex: 1; }
+  .bcard.robot { border-color: var(--accent); } .bcard.ready { border-color: #1d5a39; } .bcard.charging { border-color: #23417a; }
+  .join { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+  .join form { width: 100%; max-width: 380px; display: grid; gap: 14px; }
+  .join h1 { margin: 0; text-align: center; }
+  .join img { width: 72px; margin: 0 auto; display: block; }
+  .err { color: var(--red); min-height: 1.4em; text-align: center; }
+  .settings li { justify-content: space-between; }
+  .overlay.alarm small { opacity: .8; font-size: 16px; }
+  .tip { font-size: 14px; background: var(--panel-2); border-radius: 12px; padding: 10px 12px; border: 1px solid var(--line); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<section class="join" id="joinView" hidden>
+  <form id="joinForm">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K" alt="">
+    <h1>מרכז הפיט</h1>
+    <p class="muted" style="text-align:center;margin:0">התחברו כדי לקבל קריאות והודעות מהפיט</p>
+    <label>השם שלך<input id="jName" autocomplete="name" required maxlength="30"></label>
+    <label>קוד הצטרפות<input id="jCode" inputmode="numeric" autocomplete="one-time-code" dir="ltr"></label>
+    <button class="primary" style="padding:14px">התחברות</button>
+    <div class="err" id="jErr"></div>
+  </form>
+</section>
+
+<div id="appView" hidden>
+  <div class="top"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K" alt=""><b id="title">מרכז הפיט</b><span class="pill" id="conn"><span class="dot"></span></span></div>
+  <div class="wrap">
+    <section data-tab="match">
+      <div id="nextCard" class="card"></div>
+      <div class="panel" style="margin-bottom:12px">
+        <h2>רשימת בדיקה</h2>
+        <ul class="list" id="checklist"></ul>
+      </div>
+      <div class="panel">
+        <h2>המשחקים שלנו</h2>
+        <ul class="list" id="matches"></ul>
+      </div>
+    </section>
+
+    <section data-tab="chat" hidden>
+      <div class="msgs" id="msgs"></div>
+      <div class="composer">
+        <div class="quick">
+          <button data-quick="בדרך!">בדרך!</button>
+          <button data-quick="עוד 2 דקות">עוד 2 דקות</button>
+          <button data-quick="צריך עזרה בפיט">צריך עזרה</button>
+          <button data-quick="מוכנים בתור">מוכנים בתור</button>
+        </div>
+        <form id="sendForm" class="row"><input id="sendText" placeholder="הודעה לפיט…" autocomplete="off"><button class="primary">שלח</button></form>
+      </div>
+    </section>
+
+    <section data-tab="scout" hidden>
+      <div class="panel">
+        <h2><span class="grow">קבוצות באירוע</span></h2>
+        <div class="sorts" id="sorts"></div>
+        <ul class="list" id="scout"></ul>
+      </div>
+    </section>
+
+    <section data-tab="pit" hidden>
+      <div class="panel" style="margin-bottom:12px">
+        <h2>סוללות</h2>
+        <div id="batteries"></div>
+      </div>
+      <div class="panel">
+        <h2>יומן תיקונים</h2>
+        <form class="row" id="repairForm" style="margin-bottom:8px"><input id="repairText" placeholder="מה צריך לתקן?"><button>הוסף</button></form>
+        <ul class="list" id="repairs"></ul>
+      </div>
+    </section>
+
+    <section data-tab="me" hidden>
+      <div class="panel settings stack">
+        <h2>הטלפון שלי</h2>
+        <ul class="list">
+          <li><span>מחובר בתור</span><b id="meName"></b></li>
+          <li><span>התראות</span><button id="notifBtn">אפשר</button></li>
+          <li><span>להשאיר את המסך דלוק</span><button id="wakeBtn">הפעל</button></li>
+          <li><span>בדיקת צלצול</span><button id="testBtn">צלצל</button></li>
+        </ul>
+        <div class="tip" id="tip"></div>
+        <button class="ghost" id="logout">התנתקות</button>
+      </div>
+    </section>
+  </div>
+
+  <nav>
+    <button class="on" data-go="match"><span>🏁</span>משחק</button>
+    <button data-go="chat"><span>💬</span>הודעות<i class="badge" id="badge" hidden></i></button>
+    <button data-go="scout"><span>📊</span>סקאוטינג</button>
+    <button data-go="pit"><span>🔋</span>פיט</button>
+    <button data-go="me"><span>⚙️</span>אני</button>
+  </nav>
+</div>
+
+<div class="overlay alarm" id="alarm">
+  <h1>בוא לפיט עכשיו!</h1>
+  <p id="alarmReason"></p>
+  <button id="ackBtn">קיבלתי, בדרך!</button>
+  <small>הצלצול ייעצר לבד אחרי שתי דקות</small>
+</div>
+
+<script>
+// כלים משותפים למסך הפיט ולטלפון
+const Pit = (() => {
+  let token = null;
+  try { token = localStorage.getItem('pit-token'); } catch {}
+  const keyFromUrl = new URLSearchParams(location.search).get('key');
+
+  function authQS() {
+    if (keyFromUrl) return `key=${encodeURIComponent(keyFromUrl)}`;
+    if (token) return `token=${encodeURIComponent(token)}`;
+    return '';
+  }
+  function setToken(t) { token = t; try { t ? localStorage.setItem('pit-token', t) : localStorage.removeItem('pit-token'); } catch {} }
+
+  async function api(path, body) {
+    const sep = path.includes('?') ? '&' : '?';
+    const r = await fetch(`${path}${sep}${authQS()}`, body === undefined ? {} : {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { const e = new Error(data.error || r.status); e.status = r.status; throw e; }
+    return data;
+  }
+
+  function stream(handlers) {
+    const es = new EventSource(`/api/stream?${authQS()}`);
+    for (const [ev, fn] of Object.entries(handlers)) {
+      es.addEventListener(ev, (e) => { let d = {}; try { d = JSON.parse(e.data); } catch {} fn(d); });
+    }
+    es.onerror = () => handlers.down && handlers.down();
+    es.onopen = () => handlers.up && handlers.up();
+    return es;
+  }
+
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const time = (t) => t ? new Date(t).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
+  const ago = (t) => {
+    if (!t) return '';
+    const s = Math.round((Date.now() - t) / 1000);
+    if (s < 60) return 'עכשיו';
+    if (s < 3600) return `לפני ${Math.round(s / 60)} דק׳`;
+    return time(t);
+  };
+  const colorName = (c) => (c === 'red' ? 'אדומה' : 'כחולה');
+  const fixed = (v, n = 1) => (v == null ? '—' : Number(v).toFixed(n));
+
+  function teamsHtml(list, color, me) {
+    return list.map((n) => `<span class="tn ${color} ${n === me ? 'me' : ''}" data-team="${n}">${n}</span>`).join('');
+  }
+  function awayText(n) {
+    if (n === 0) return 'על המגרש עכשיו';
+    if (n === 1) return 'עוד משחק אחד';
+    return `עוד ${n} משחקים`;
+  }
+
+  // ---------- צליל ----------
+  let ctx = null, loop = null;
+  function unlockAudio() {
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') ctx.resume();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      g.gain.value = 0.0001; o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.02);
+    } catch {}
+  }
+  function beep(freq = 880, dur = 0.18, vol = 0.6) {
+    if (!ctx) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square'; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + dur);
+  }
+  function alarm(on, pattern = 'alarm') {
+    clearInterval(loop); loop = null;
+    if (!on) return;
+    const tick = () => {
+      if (pattern === 'alarm') { beep(988, 0.16); setTimeout(() => beep(740, 0.16), 200); }
+      else { beep(660, 0.12, 0.4); setTimeout(() => beep(880, 0.2, 0.4), 160); }
+    };
+    tick();
+    loop = setInterval(tick, pattern === 'alarm' ? 600 : 1400);
+  }
+
+  let toastTimer;
+  function toast(text) {
+    let el = document.querySelector('.toast');
+    if (!el) { el = document.createElement('div'); el.className = 'toast'; document.body.append(el); }
+    el.textContent = text; el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+  }
+
+  return { api, stream, esc, time, ago, colorName, fixed, teamsHtml, awayText, unlockAudio, beep, alarm, toast, setToken, get token() { return token; } };
+})();
+
+</script>
+<script>
+// ===== מצב הדגמה: אין שרת, הכול קורה בתוך הקובץ =====
+(() => {
+  const D = {"team": 9662, "season": 2025, "demo": false, "event": {"code": "DEMO", "name": "אירוע הדגמה", "start": "", "end": "", "venue": "", "city": "עיר לדוגמה", "fields": 2}, "error": "", "updatedAt": 0, "totalMatches": 52, "playedMatches": 6, "ours": [{"key": "m0", "label": "מ׳3", "level": "Quals", "color": "red", "station": 1, "partners": [90116], "opponents": [90114, 90112], "time": null, "played": true, "our": 112, "their": 126, "result": "L", "away": null}, {"key": "m1", "label": "מ׳8", "level": "Quals", "color": "blue", "station": 2, "partners": [90116], "opponents": [90102, 90112], "time": null, "played": true, "our": 148, "their": 131, "result": "W", "away": null}, {"key": "m2", "label": "מ׳12", "level": "Quals", "color": "blue", "station": 1, "partners": [90109], "opponents": [90105, 90121], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 4}, {"key": "m3", "label": "מ׳17", "level": "Quals", "color": "red", "station": 1, "partners": [90119], "opponents": [90118, 90103], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 8}, {"key": "m4", "label": "מ׳21", "level": "Quals", "color": "red", "station": 1, "partners": [90114], "opponents": [90118, 90116], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 11}, {"key": "m5", "label": "מ׳26", "level": "Quals", "color": "blue", "station": 1, "partners": [90106], "opponents": [90104, 90121], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 15}, {"key": "m6", "label": "פ׳2", "level": "DoubleElim", "color": "red", "station": 1, "partners": [90105], "opponents": [90123, 90122], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 18}, {"key": "m7", "label": "פ׳3", "level": "DoubleElim", "color": "red", "station": 1, "partners": [90111], "opponents": [90101, 90122], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 19}, {"key": "m8", "label": "פ׳5", "level": "DoubleElim", "color": "red", "station": 1, "partners": [90119], "opponents": [90106, 90110], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 21}], "next": {"key": "m2", "label": "מ׳12", "level": "Quals", "color": "blue", "station": 1, "partners": [90109], "opponents": [90105, 90121], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 4}, "playingNow": false, "eventTeams": [{"number": 90110, "rank": 1, "wins": 5, "losses": 0, "ties": 1, "opr": 138.9, "auto": 32.5, "teleop": 107.9, "avg": 256.0}, {"number": 90119, "rank": 2, "wins": 5, "losses": 1, "ties": 0, "opr": 138.8, "auto": 36.8, "teleop": 103.1, "avg": 242.5}, {"number": 90114, "rank": 3, "wins": 4, "losses": 2, "ties": 0, "opr": 123.9, "auto": 18.6, "teleop": 102.4, "avg": 214.5}, {"number": 90121, "rank": 4, "wins": 6, "losses": 0, "ties": 0, "opr": 119.0, "auto": 25.6, "teleop": 93.6, "avg": 223.2}, {"number": 90113, "rank": 5, "wins": 5, "losses": 1, "ties": 0, "opr": 111.9, "auto": 21.2, "teleop": 88.0, "avg": 192.3}, {"number": 90112, "rank": 6, "wins": 4, "losses": 2, "ties": 0, "opr": 108.5, "auto": 30.6, "teleop": 72.3, "avg": 203.8}, {"number": 90102, "rank": 7, "wins": 4, "losses": 2, "ties": 0, "opr": 101.2, "auto": 28.7, "teleop": 66.7, "avg": 185.5}, {"number": 90101, "rank": 8, "wins": 5, "losses": 1, "ties": 0, "opr": 102.5, "auto": 34.3, "teleop": 73.8, "avg": 177.7}, {"number": 90107, "rank": 9, "wins": 3, "losses": 3, "ties": 0, "opr": 110.2, "auto": 34.9, "teleop": 71.8, "avg": 189.5}, {"number": 90109, "rank": 10, "wins": 3, "losses": 3, "ties": 0, "opr": 108.0, "auto": 10.4, "teleop": 99.4, "avg": 197.2}, {"number": 90106, "rank": 11, "wins": 4, "losses": 2, "ties": 0, "opr": 108.7, "auto": 36.3, "teleop": 69.6, "avg": 199.4}, {"number": 90103, "rank": 12, "wins": 4, "losses": 2, "ties": 0, "opr": 85.0, "auto": 27.0, "teleop": 63.3, "avg": 157.8}, {"number": 90116, "rank": 13, "wins": 2, "losses": 4, "ties": 0, "opr": 85.6, "auto": 39.3, "teleop": 46.2, "avg": 159.4}, {"number": 9662, "rank": 14, "wins": 3, "losses": 3, "ties": 0, "opr": 79.3, "auto": 21.4, "teleop": 62.8, "avg": 143.0}, {"number": 90104, "rank": 15, "wins": 2, "losses": 4, "ties": 0, "opr": 86.8, "auto": 12.5, "teleop": 78.3, "avg": 155.9}, {"number": 90123, "rank": 16, "wins": 2, "losses": 4, "ties": 0, "opr": 78.0, "auto": 38.1, "teleop": 34.3, "avg": 133.9}, {"number": 90120, "rank": 17, "wins": 2, "losses": 3, "ties": 1, "opr": 55.6, "auto": 10.1, "teleop": 40.5, "avg": 98.6}, {"number": 90118, "rank": 18, "wins": 2, "losses": 4, "ties": 0, "opr": 61.9, "auto": 38.5, "teleop": 28.0, "avg": 111.5}, {"number": 90115, "rank": 19, "wins": 1, "losses": 5, "ties": 0, "opr": 65.0, "auto": 8.9, "teleop": 59.9, "avg": 118.3}, {"number": 90108, "rank": 20, "wins": 1, "losses": 5, "ties": 0, "opr": 61.8, "auto": 10.6, "teleop": 55.3, "avg": 118.9}, {"number": 90105, "rank": 21, "wins": 0, "losses": 6, "ties": 0, "opr": 63.8, "auto": 12.2, "teleop": 55.2, "avg": 114.0}, {"number": 90117, "rank": 22, "wins": 0, "losses": 6, "ties": 0, "opr": 52.1, "auto": 23.6, "teleop": 26.5, "avg": 100.1}, {"number": 90111, "rank": 23, "wins": 0, "losses": 6, "ties": 0, "opr": 52.7, "auto": 9.3, "teleop": 45.8, "avg": 101.0}, {"number": 90122, "rank": 24, "wins": 0, "losses": 6, "ties": 0, "opr": 49.9, "auto": 10.2, "teleop": 34.4, "avg": 88.0}], "checklist": [{"text": "סוללה טעונה ומחוברת", "done": true}, {"text": "רכזת הנהג טעונה ומחוברת לרובוט", "done": true}, {"text": "שלטים מחוברים ומשויכים", "done": false}, {"text": "נבחרה תוכנית אוטונומית נכונה", "done": false}, {"text": "ברגים ומחברים נבדקו", "done": false}, {"text": "סימון הברית על הרובוט", "done": false}], "batteries": [{"id": "b1", "name": "סוללה 1", "status": "ready", "voltage": 13.4, "uses": 3}, {"id": "b2", "name": "סוללה 2", "status": "robot", "voltage": 12.9, "uses": 4}, {"id": "b3", "name": "סוללה 3", "status": "charging", "voltage": null, "uses": 1}, {"id": "b4", "name": "סוללה 4", "status": "used", "voltage": 12.1, "uses": 5}], "repairs": [{"id": "r1", "text": "להחליף גלגל שמאלי קדמי", "by": "הפיט", "at": 0, "done": false}, {"id": "r2", "text": "להדק את הברגים של הזרוע", "by": "חבר צוות", "at": 0, "done": true}], "me": {"id": "me", "name": "", "alert": {"state": "none"}}, "messages": [{"id": "m1", "from": "pit", "to": "all", "text": "כולם לחזור לפיט אחרי המשחק, יש שינוי באוטונומי", "at": 0, "readBy": []}]};
+  const now = Date.now();
+  // מזיזים את הזמנים כך שייראו עדכניים
+  D.messages.forEach((m, i) => (m.at = now - (D.messages.length - i) * 4 * 60000));
+  D.repairs.forEach((r, i) => (r.at = now - (i + 1) * 9 * 60000));
+  D.ours.forEach((m, i) => (m.time = new Date(now + (i - 2) * 22 * 60000).toISOString()));
+  D.updatedAt = now;
+  let handlers = {};
+  let n = 1;
+  const id = () => 'd' + n++;
+  const copy = () => JSON.parse(JSON.stringify(D));
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  function pitSays(text, delay = 1800) {
+    setTimeout(() => {
+      D.messages.push({ id: id(), from: 'pit', to: 'all', text, at: Date.now(), readBy: [] });
+      handlers.message && handlers.message({ from: 'הפיט', to: 'all' });
+    }, delay);
+  }
+
+  function advance() {
+    const next = D.ours.find((m) => !m.played);
+    if (!next) return Pit.toast('אין עוד משחקים');
+    if (next.away > 0) {
+      D.ours.forEach((m) => { if (!m.played) m.away = Math.max(0, m.away - 1); });
+    } else {
+      next.played = true;
+      next.our = 90 + Math.floor(Math.random() * 140);
+      next.their = 90 + Math.floor(Math.random() * 140);
+      next.result = next.our > next.their ? 'W' : next.our < next.their ? 'L' : 'T';
+      next.away = null;
+      D.ours.forEach((m) => { if (!m.played) m.away = Math.max(0, m.away - 1); });
+      D.checklist.forEach((c) => (c.done = false));
+    }
+    D.next = D.ours.find((m) => !m.played) || null;
+    handlers.change && handlers.change();
+  }
+
+  Pit.api = async (path, body) => {
+    await wait(80);
+    const p = path.split('?')[0];
+    if (p === '/api/join') {
+      if (!body.name?.trim()) throw new Error('צריך שם');
+      D.me.name = body.name.trim();
+      return { token: 'demo', id: 'me' };
+    }
+    if (p === '/api/state') return copy();
+    if (p === '/api/check') {
+      if (body.reset) D.checklist.forEach((c) => (c.done = false));
+      else D.checklist[body.index].done = !!body.done;
+    }
+    if (p === '/api/message') {
+      D.messages.push({ id: id(), from: 'me', to: 'pit', text: body.text, at: Date.now(), readBy: [] });
+      const msg = D.messages[D.messages.length - 1];
+      setTimeout(() => { msg.readBy.push('pit'); handlers.change && handlers.change(); }, 1200);
+      pitSays(/בדרך/.test(body.text) ? 'מעולה, מחכים לך 👍' : 'קיבלנו 👍', 2600);
+    }
+    if (p === '/api/read') D.messages.forEach((m) => body.ids.includes(m.id) && !m.readBy.includes('me') && m.readBy.push('me'));
+    if (p === '/api/battery') {
+      const b = D.batteries.find((x) => x.id === body.id);
+      if (b && body.action === 'status') {
+        if (body.status === 'robot') { D.batteries.forEach((o) => o.status === 'robot' && o !== b && (o.status = 'used')); b.uses++; }
+        b.status = body.status;
+      }
+    }
+    if (p === '/api/repair') {
+      if (body.action === 'add') D.repairs.unshift({ id: id(), text: body.text, by: D.me.name, at: Date.now(), done: false });
+      const r = D.repairs.find((x) => x.id === body.id);
+      if (r && body.action === 'toggle') r.done = !r.done;
+    }
+    if (p === '/api/ack') { D.me.alert = { state: 'ack' }; pitSays('ראינו, תודה! 🙏', 1500); }
+    return { ok: true };
+  };
+  Pit.stream = (h) => { handlers = h; setTimeout(() => h.up && h.up(), 200); return { close() {} }; };
+
+  // פאנל הדגמה
+  window.addEventListener('DOMContentLoaded', () => {
+    const css = document.createElement('style');
+    css.textContent = `
+      .demo-fab { position: fixed; bottom: calc(86px + env(safe-area-inset-bottom)); inset-inline-start: 12px; z-index: 40; background: #ffb020; color: #1a1200; border: 0; border-radius: 99px; padding: 8px 14px; font-weight: 700; box-shadow: 0 6px 20px #0008; }
+      .demo-menu { position: fixed; bottom: calc(132px + env(safe-area-inset-bottom)); inset-inline-start: 12px; z-index: 40; background: var(--panel); border: 1px solid var(--accent); border-radius: 14px; padding: 8px; display: none; flex-direction: column; gap: 6px; width: 230px; box-shadow: 0 10px 30px #000a; }
+      .demo-menu.show { display: flex; }
+      .demo-menu small { color: var(--muted); padding: 4px 6px; }
+      .demo-menu button { text-align: start; }`;
+    document.head.append(css);
+    const fab = Object.assign(document.createElement('button'), { className: 'demo-fab', textContent: '▶ הדגמה' });
+    const menu = Object.assign(document.createElement('div'), { className: 'demo-menu' });
+    menu.innerHTML = `
+      <small>זו הדגמה בלבד, בלי שרת. נסו:</small>
+      <button data-d="alarm">🔴 קריאה מהפיט</button>
+      <button data-d="alarm2">🔴 קריאה עם סיבה</button>
+      <button data-d="msg">💬 הודעה מהפיט</button>
+      <button data-d="adv">⏩ להתקדם משחק</button>
+      <button data-d="out">↩ חזרה למסך ההתחברות</button>`;
+    document.body.append(fab, menu);
+    fab.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('show'); };
+    menu.onclick = (e) => {
+      const a = e.target.closest('[data-d]')?.dataset.d;
+      if (!a) return;
+      menu.classList.remove('show');
+      Pit.unlockAudio();
+      if (a === 'alarm' || a === 'alarm2') {
+        const reason = a === 'alarm2' ? 'להביא את השלט השני' : 'בוא לפיט עכשיו!';
+        D.me.alert = { state: 'ringing', reason };
+        setTimeout(() => handlers.alert && handlers.alert({ reason }), 600);
+      }
+      if (a === 'msg') pitSays(['הסוללה ברובוט חלשה, תבדקו', 'שופט מבקש לראות את הרובוט', 'עוד שני משחקים, להתחיל להתכונן'][Math.floor(Math.random() * 3)], 300);
+      if (a === 'adv') advance();
+      if (a === 'out') { Pit.setToken(null); location.reload(); }
+    };
+    document.addEventListener('click', () => menu.classList.remove('show'));
+    fab.hidden = true;
+    new MutationObserver(() => (fab.hidden = document.querySelector('#appView').hidden)).observe(document.querySelector('#appView'), { attributes: true });
+  });
+})();
+
+</script>
+<script>
+const { api, esc, time, colorName, teamsHtml, awayText } = Pit;
+const $ = (s) => document.querySelector(s);
+let S = null, es = null, tab = 'match', wake = null;
+const params = new URLSearchParams(location.search);
+$('#jCode').value = params.get('code') || '482913';
+try { $('#jName').value = localStorage.getItem('pit-name') || ''; } catch {}
+
+// ---------- התחברות ----------
+function showJoin(msg) { $('#joinView').hidden = false; $('#appView').hidden = true; $('#jErr').textContent = msg || ''; es?.close(); }
+$('#joinForm').onsubmit = async (e) => {
+  e.preventDefault();
+  Pit.unlockAudio();
+  try {
+    const name = $('#jName').value.trim();
+    const r = await api('/api/join', { name, code: $('#jCode').value });
+    Pit.setToken(r.token);
+    try { localStorage.setItem('pit-name', name); } catch {}
+    history.replaceState(null, '', location.pathname);
+    start();
+  } catch (err) { $('#jErr').textContent = err.message === 'Failed to fetch' ? 'אין חיבור לשרת הפיט' : err.message; }
+};
+
+async function start() {
+  $('#joinView').hidden = true; $('#appView').hidden = false;
+  await load();
+  es?.close();
+  es = Pit.stream({
+    change: load,
+    alert: (d) => ring(true, d.reason),
+    'alert-stop': () => ring(false),
+    message: (d) => { load(); if (tab !== 'chat') { navigator.vibrate?.(200); notify(`הודעה מ${d.from}`); } },
+    kicked: () => { Pit.setToken(null); showJoin('נותקת מהפיט'); },
+    up: () => setConn(true), down: () => setConn(false),
+  });
+}
+
+async function load() {
+  try { S = await api('/api/state'); render(); }
+  catch (e) { if (e.status === 401 || e.status === 403) { Pit.setToken(null); showJoin(); } }
+}
+
+function setConn(on) { $('#conn').innerHTML = `<span class="dot ${on ? 'on' : ''}"></span>${on ? 'מחובר' : 'מנותק'}`; }
+
+// ---------- תצוגה ----------
+function render() {
+  $('#title').innerHTML = `<span class="num">${S.team}</span>${S.event ? ` · <bdi>${esc(S.event.name)}</bdi>` : ''}`;
+  $('#meName').textContent = S.me.name;
+  const n = S.next, c = $('#nextCard');
+  if (!n) {
+    c.className = 'card';
+    c.innerHTML = S.ours.length ? '<div class="label">🏁</div><div class="away">סיימנו את המשחקים באירוע</div>' : '<div class="away">עוד אין לוח משחקים</div><div class="muted">יופיע לבד כשיתפרסם</div>';
+  } else {
+    c.className = `card ${n.color}`;
+    c.innerHTML = `
+      <div class="muted">המשחק הבא${n.time ? ' · ' + time(n.time) : ''}</div>
+      <div class="label num">${esc(n.label)}</div>
+      <div class="alli"><b>ברית ${colorName(n.color)}</b>${n.station ? ` · עמדה ${n.station}` : ''}</div>
+      <div class="away">${awayText(n.away)}</div>
+      <div class="sides">
+        <div><small>איתנו</small><div class="teams">${teamsHtml([S.team, ...n.partners], n.color, S.team)}</div></div>
+        <div><small>יריבים</small><div class="teams">${teamsHtml(n.opponents, n.color === 'red' ? 'blue' : 'red')}</div></div>
+      </div>`;
+  }
+  $('#checklist').innerHTML = S.checklist.map((x, i) => `<li class="check ${x.done ? 'done' : ''}" data-i="${i}"><span class="box"></span><span>${esc(x.text)}</span></li>`).join('');
+  $('#matches').innerHTML = S.ours.map((m) => `
+    <li><b class="num" style="width:48px">${esc(m.label)}</b><span class="pill ${m.color}">${colorName(m.color)}</span>
+      <span style="flex:1"></span>
+      ${m.played ? `<b class="res" style="color:${m.result === 'W' ? 'var(--green)' : m.result === 'L' ? 'var(--red)' : 'var(--muted)'}">${{ W: 'ניצחון', L: 'הפסד', T: 'תיקו' }[m.result] || ''}</b> <span class="num muted">${m.our ?? ''}:${m.their ?? ''}</span>` : `<span class="muted">${awayText(m.away)}</span>`}</li>`).join('') || '<li class="empty">אין משחקים עדיין</li>';
+
+  // הודעות
+  const box = $('#msgs');
+  box.innerHTML = S.messages.map((m) => {
+    const mine = m.from === S.me.id;
+    const meta = mine ? `${time(m.at)} · ${m.readBy.includes('pit') ? 'נקרא ✓✓' : 'נשלח ✓'}` : `הפיט${m.to === 'all' ? ' · לכולם' : ''} · ${time(m.at)}`;
+    return `<div class="msg ${mine ? 'mine' : ''}">${esc(m.text)}<small>${meta}</small></div>`;
+  }).join('') || '<div class="empty">אין הודעות עדיין</div>';
+  const unread = S.messages.filter((m) => m.from !== S.me.id && !m.readBy.includes(S.me.id)).map((m) => m.id);
+  $('#badge').hidden = !unread.length || tab === 'chat';
+  $('#badge').textContent = unread.length;
+  if (tab === 'chat') { window.scrollTo(0, document.body.scrollHeight); if (unread.length) api('/api/read', { ids: unread }); }
+
+  const BS = { charging: 'בטעינה', ready: 'מוכנה', robot: 'ברובוט', used: 'משומשת' };
+  $('#batteries').innerHTML = S.batteries.map((b) => `
+    <div class="bcard ${b.status}"><b>${esc(b.name)}</b><small class="muted">${b.uses} שימושים${b.voltage ? ` · <span class="num">${b.voltage}V</span>` : ''}</small>
+      <select data-batt="${b.id}" style="width:auto">${Object.entries(BS).map(([k, v]) => `<option value="${k}" ${k === b.status ? 'selected' : ''}>${v}</option>`).join('')}</select></div>`).join('') || '<div class="empty">אין סוללות. מוסיפים אותן ממסך הפיט.</div>';
+  $('#repairs').innerHTML = S.repairs.map((r) => `<li class="check ${r.done ? 'done' : ''}" data-repair="${r.id}"><span class="box"></span><span>${esc(r.text)}<br><small class="muted">${esc(r.by)} · ${time(r.at)}</small></span></li>`).join('') || '<li class="empty">אין תיקונים פתוחים</li>';
+
+  renderScout();
+  if (S.me.alert?.state === 'ringing' && !ringing) ring(true, S.me.alert.reason);
+  if (S.me.alert?.state !== 'ringing' && ringing) ring(false);
+}
+
+// ---------- סקאוטינג ----------
+const SORTS = [['opr', 'תרומה משוערת', -1], ['rank', 'דירוג', 1], ['auto', 'אוטונומי', -1], ['teleop', 'שליטה ידנית', -1]];
+let sortKey = 'opr', sortDir = -1;
+function renderScout() {
+  $('#sorts').innerHTML = SORTS.map(([k, t]) => `<button data-sort="${k}" class="${k === sortKey ? 'on' : ''}">${t}${k === sortKey ? (sortDir > 0 ? ' ▲' : ' ▼') : ''}</button>`).join('');
+  const none = sortDir > 0 ? Infinity : -Infinity;
+  const rows = [...(S.eventTeams || [])].sort((a, b) => ((a[sortKey] ?? none) - (b[sortKey] ?? none)) * sortDir);
+  $('#scout').innerHTML = rows.map((t, i) => `
+    <li class="srow ${t.number === S.team ? 'us' : ''}"><span class="rk num">${i + 1}</span>
+      <span class="tn" data-team="${t.number}">${t.number}</span>
+      <small class="muted num">${t.wins}-${t.losses}-${t.ties}</small>
+      <span class="val num">${Pit.fixed(t[sortKey], sortKey === 'rank' ? 0 : 1)}</span></li>`).join('') || '<li class="empty">אין עדיין נתונים לאירוע</li>';
+}
+
+// ---------- צלצול ----------
+let ringing = false, vibTimer = null, stopTimer = null;
+function ring(on, reason) {
+  ringing = on;
+  $('#alarm').classList.toggle('show', on);
+  clearInterval(vibTimer); clearTimeout(stopTimer);
+  Pit.alarm(on);
+  if (!on) { navigator.vibrate?.(0); return; }
+  $('#alarmReason').textContent = reason && reason !== 'בוא לפיט עכשיו!' ? reason : (S?.next ? `משחק ${S.next.label} · ${awayText(S.next.away)}` : '');
+  const vib = () => navigator.vibrate?.([700, 300, 700, 300, 700]);
+  vib(); vibTimer = setInterval(vib, 3000);
+  stopTimer = setTimeout(() => { Pit.alarm(false); clearInterval(vibTimer); }, 120_000);
+  notify('בוא לפיט עכשיו!', true);
+}
+$('#ackBtn').onclick = async () => { ring(false); try { await api('/api/ack', {}); } catch {} load(); };
+
+// ---------- התראות מערכת (עובד רק בחיבור מאובטח) ----------
+let swReg = null;
+if (false) navigator.serviceWorker.register('sw.js').then((r) => (swReg = r)).catch(() => {});
+function notify(body, urgent) {
+  if (!('Notification' in window) || Notification.permission !== 'granted' || document.visibilityState === 'visible') return;
+  const opts = { body, tag: urgent ? 'pit-alert' : 'pit-msg', renotify: true, requireInteraction: !!urgent, vibrate: [700, 300, 700, 300, 700], icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K' };
+  try { swReg ? swReg.showNotification('מרכז הפיט', opts) : new Notification('מרכז הפיט', opts); } catch {}
+}
+function updateMeTab() {
+  const n = 'Notification' in window ? Notification.permission : 'none';
+  $('#notifBtn').textContent = n === 'granted' ? 'פעילות ✓' : n === 'denied' ? 'חסומות' : n === 'none' ? 'לא נתמך' : 'אפשר';
+  $('#notifBtn').disabled = n !== 'default';
+  $('#wakeBtn').textContent = wake ? 'פעיל ✓' : 'הפעל';
+  $('#wakeBtn').disabled = !('wakeLock' in navigator);
+  const tips = [];
+  if (!window.isSecureContext) tips.push('החיבור לא מאובטח, לכן התראות מערכת ונעילת מסך דלוק לא זמינות. כדי שהצלצול יגיע, השאירו את הדף פתוח בחזית.');
+  if (/iPhone|iPad/.test(navigator.userAgent)) tips.push('באייפון אין רטט מהדפדפן. הוסיפו את הדף למסך הבית לחוויה טובה יותר.');
+  tips.push('כדי לא לפספס קריאה: השאירו את הדף פתוח והפעילו "להשאיר את המסך דלוק".');
+  $('#tip').innerHTML = tips.map(esc).join('<br><br>');
+}
+$('#notifBtn').onclick = async () => { await Notification.requestPermission(); updateMeTab(); };
+$('#wakeBtn').onclick = async () => {
+  $('#wakeBtn').dataset.want = '1';
+  try { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; updateMeTab(); }); } catch { Pit.toast('לא הצלחתי להשאיר את המסך דלוק'); }
+  updateMeTab();
+};
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible') { load(); if (wake === null && $('#wakeBtn').dataset.want) $('#wakeBtn').click(); }
+});
+$('#testBtn').onclick = () => { Pit.unlockAudio(); ring(true, 'בדיקת צלצול'); setTimeout(() => ring(false), 3000); };
+$('#logout').onclick = () => { Pit.setToken(null); showJoin(); };
+
+// ---------- פעולות ----------
+document.addEventListener('click', (e) => {
+  Pit.unlockAudio();
+  const t = e.target.closest('[data-go],[data-i],[data-repair],[data-sort],[data-quick]');
+  if (!t) return;
+  if (t.dataset.sort) {
+    const def = SORTS.find((s) => s[0] === t.dataset.sort)[2];
+    sortDir = sortKey === t.dataset.sort ? -sortDir : def; sortKey = t.dataset.sort;
+    return renderScout();
+  }
+  if (t.dataset.quick) { api('/api/message', { text: t.dataset.quick }).then(load); Pit.toast('נשלח'); return; }
+  if (t.dataset.go) {
+    tab = t.dataset.go;
+    document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('on', b === t));
+    document.querySelectorAll('[data-tab]').forEach((s) => (s.hidden = s.dataset.tab !== tab));
+    if (tab === 'me') updateMeTab();
+    if (S) render();
+    if (tab !== 'chat') window.scrollTo(0, 0);
+    return;
+  }
+  if (t.dataset.i !== undefined) { const c = S.checklist[t.dataset.i]; c.done = !c.done; render(); api('/api/check', { index: Number(t.dataset.i), done: c.done }); return; }
+  if (t.dataset.repair) api('/api/repair', { action: 'toggle', id: t.dataset.repair }).then(load);
+});
+document.addEventListener('change', (e) => {
+  const id = e.target.dataset.batt;
+  if (id) api('/api/battery', { action: 'status', id, status: e.target.value }).then(load);
+});
+$('#sendForm').onsubmit = (e) => { e.preventDefault(); const text = $('#sendText').value.trim(); if (!text) return; $('#sendText').value = ''; api('/api/message', { text }).then(load); };
+$('#repairForm').onsubmit = (e) => { e.preventDefault(); const text = $('#repairText').value.trim(); if (!text) return; $('#repairText').value = ''; api('/api/repair', { action: 'add', text }).then(load); };
+
+// גיבוי למקרה שהחיבור החי נופל
+setInterval(() => { if (Pit.token && document.visibilityState === 'visible') load(); }, 15_000);
+
+if (Pit.token) start(); else showJoin();
+</script>
+</body>
+</html>

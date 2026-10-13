@@ -1,0 +1,11 @@
+{
+  "name": "מרכז הפיט",
+  "short_name": "פיט",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "/m",
+  "display": "standalone",
+  "background_color": "#0b0e14",
+  "theme_color": "#0b0e14",
+  "icons": [{ "src": "logo.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

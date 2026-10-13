@@ -1,0 +1,12 @@
+# מצב מקומי של השרת: חברי צוות, הודעות, קוד הצטרפות ומפתח מנהל
+data.json
+data.json.tmp
+
+# הגדרות מקומיות וסודות
+config.local.*
+.env
+*.local.json
+
+node_modules/
+.DS_Store
+Thumbs.db

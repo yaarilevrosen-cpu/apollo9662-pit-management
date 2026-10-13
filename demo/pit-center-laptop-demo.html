@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מרכז הפיט · הדגמה</title>
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0e14;
+  --panel: #131824;
+  --panel-2: #1a2131;
+  --line: #262f44;
+  --text: #e8ecf4;
+  --muted: #8b95ab;
+  --accent: #ffb020;
+  --accent-ink: #1a1200;
+  --red: #ff4d5e;
+  --red-soft: #3a1219;
+  --blue: #3d8bff;
+  --blue-soft: #0f2141;
+  --green: #2fd17a;
+  --green-soft: #0e2d1d;
+  --radius: 14px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body {
+  font-family: "Rubik", "Segoe UI", "Arial Hebrew", Arial, sans-serif;
+  font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased;
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+button {
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 8px 14px; cursor: pointer; transition: background .15s, border-color .15s, transform .05s;
+}
+button:hover { border-color: #3a4560; }
+button:active { transform: scale(.97); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button.danger { background: var(--red); border-color: var(--red); color: #fff; font-weight: 600; }
+button.ghost { background: transparent; }
+button:disabled { opacity: .5; cursor: default; }
+input, textarea, select {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; width: 100%;
+}
+input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+.num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; display: inline-block; }
+.muted { color: var(--muted); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.panel h2 { margin: 0 0 12px; font-size: 15px; font-weight: 600; color: var(--muted); letter-spacing: .02em; display: flex; align-items: center; gap: 8px; }
+.panel h2 .grow { flex: 1; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 99px; font-size: 13px; background: var(--panel-2); border: 1px solid var(--line); }
+.pill.red { background: var(--red-soft); border-color: #6b2230; color: #ffb3bb; }
+.pill.blue { background: var(--blue-soft); border-color: #23417a; color: #a9cbff; }
+.pill.green { background: var(--green-soft); border-color: #1d5a39; color: #8ff0bb; }
+.pill.amber { background: #3a2a07; border-color: #6e5110; color: #ffd27a; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.dot.on { background: var(--green); box-shadow: 0 0 0 3px #2fd17a33; }
+.row { display: flex; align-items: center; gap: 10px; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.list { list-style: none; margin: 0; padding: 0; }
+.list > li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.list > li:last-child { border-bottom: 0; }
+.empty { color: var(--muted); font-size: 14px; padding: 8px 0; }
+
+/* רשימת בדיקה */
+.check { cursor: pointer; user-select: none; }
+.check .box { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--line); flex: none; display: grid; place-items: center; }
+.check.done .box { background: var(--green); border-color: var(--green); }
+.check.done .box::after { content: ""; width: 10px; height: 6px; border: 2.5px solid #06210f; border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
+.check.done span { color: var(--muted); text-decoration: line-through; }
+
+/* קבוצות במשחק */
+.teams { display: flex; gap: 6px; flex-wrap: wrap; }
+.tn { font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; direction: ltr; }
+.tn.red { background: var(--red-soft); color: #ffb3bb; }
+.tn.blue { background: var(--blue-soft); color: #a9cbff; }
+.tn.me { outline: 2px solid var(--accent); }
+
+/* התראה במסך מלא */
+.overlay {
+  position: fixed; inset: 0; z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center;
+  gap: 24px; text-align: center; padding: 24px;
+}
+.overlay.show { display: flex; }
+.overlay.alarm { background: #c8102e; animation: flash 1s steps(2) infinite; }
+@keyframes flash { 50% { background: #8a0a1f; } }
+.overlay h1 { font-size: clamp(36px, 9vw, 96px); margin: 0; line-height: 1.05; }
+.overlay p { font-size: clamp(18px, 3vw, 28px); margin: 0; opacity: .9; }
+.overlay button { font-size: 22px; padding: 16px 32px; border-radius: 16px; background: #fff; color: #8a0a1f; border: 0; font-weight: 700; }
+
+.toast {
+  position: fixed; bottom: 20px; inset-inline-start: 50%; transform: translateX(50%);
+  background: var(--panel-2); border: 1px solid var(--line); padding: 10px 18px; border-radius: 12px;
+  box-shadow: 0 10px 30px #0008; z-index: 60; opacity: 0; transition: opacity .2s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+</style>
+<style>
+  body { min-height: 100vh; }
+  header {
+    display: flex; align-items: center; gap: 16px; padding: 12px 20px; border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #121827, var(--bg)); position: sticky; top: 0; z-index: 10;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; }
+  .brand img { width: 30px; height: 30px; }
+  .event { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+  .event b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .event small { color: var(--muted); }
+  header .spacer { flex: 1; }
+  .tabs { display: flex; gap: 4px; background: var(--panel); padding: 4px; border-radius: 12px; border: 1px solid var(--line); }
+  .tabs button { border: 0; background: transparent; padding: 6px 14px; }
+  .tabs button.on { background: var(--panel-2); color: var(--accent); }
+  main { padding: 16px 20px 40px; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 1200px) { .grid { grid-template-columns: 1fr 1fr; } .col-main { grid-column: 1 / -1; } }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } header { flex-wrap: wrap; } }
+
+  /* המשחק הבא */
+  .hero { border-radius: 20px; padding: 22px 24px; position: relative; overflow: hidden; border: 1px solid var(--line); background: var(--panel); }
+  .hero.red { background: radial-gradient(120% 140% at 100% 0%, #5a1520 0%, #1b0d12 60%); border-color: #6b2230; }
+  .hero.blue { background: radial-gradient(120% 140% at 100% 0%, #123267 0%, #0b1424 60%); border-color: #23417a; }
+  .hero .top { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
+  .hero .big { display: flex; align-items: flex-end; gap: 18px; margin: 10px 0 16px; flex-wrap: wrap; }
+  .hero .label { font-size: 72px; font-weight: 800; line-height: .9; letter-spacing: -.02em; }
+  .hero .alliance { font-size: 28px; font-weight: 700; }
+  .hero.red .alliance { color: #ff8a96; } .hero.blue .alliance { color: #8ab8ff; }
+  .hero .away { margin-inline-start: auto; text-align: center; background: #0007; border-radius: 14px; padding: 10px 16px; }
+  .hero .away b { display: block; font-size: 40px; line-height: 1; }
+  .hero .vs { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; }
+  .hero .side { background: #0005; border-radius: 12px; padding: 10px 12px; }
+  .hero .side small { color: var(--muted); display: block; margin-bottom: 6px; }
+  .hero .side .tn { font-size: 20px; }
+  .hero.now { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 6px #ffb02055; } }
+
+  .matches { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .matches td, .matches th { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: start; }
+  .matches th { color: var(--muted); font-weight: 500; font-size: 13px; }
+  .matches tr.next td { background: #ffb02012; }
+  .matches tr.next td:first-child { box-shadow: inset -3px 0 var(--accent); }
+  .res { font-weight: 700; } .res.W { color: var(--green); } .res.L { color: var(--red); } .res.T { color: var(--muted); }
+  .bar { height: 6px; border-radius: 99px; background: var(--panel-2); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--green); transition: width .3s; }
+
+  /* חברי צוות */
+  .member .name { flex: 1; font-weight: 500; }
+  .member .st { font-size: 13px; }
+  .ring { animation: ringpulse 1s infinite; }
+  @keyframes ringpulse { 50% { opacity: .55; } }
+
+  /* צ׳אט */
+  .chat { height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px; }
+  .msg { max-width: 85%; padding: 7px 11px; border-radius: 12px; background: var(--panel-2); align-self: flex-start; }
+  .msg.mine { align-self: flex-end; background: #2a2110; border: 1px solid #5a430f; }
+  .msg small { display: block; color: var(--muted); font-size: 12px; }
+  .send { display: grid; grid-template-columns: 120px 1fr auto; gap: 8px; margin-top: 10px; }
+
+  /* סוללות */
+  .batt { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+  .bcard { border-radius: 12px; padding: 10px; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; position: relative; }
+  .bcard b { display: block; }
+  .bcard small { color: var(--muted); }
+  .bcard.robot { border-color: var(--accent); background: #2a2110; }
+  .bcard.ready { border-color: #1d5a39; background: var(--green-soft); }
+  .bcard.charging { border-color: #23417a; background: var(--blue-soft); }
+  .bcard .x { position: absolute; top: 4px; inset-inline-end: 6px; opacity: 0; border: 0; padding: 0 4px; background: none; color: var(--muted); }
+  .bcard:hover .x { opacity: 1; }
+  .suggest { font-size: 14px; margin-bottom: 10px; }
+
+  /* סקאוטינג */
+  .scout { width: 100%; border-collapse: collapse; }
+  .scout th { cursor: pointer; color: var(--muted); font-weight: 500; font-size: 13px; text-align: start; padding: 10px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; position: sticky; top: 64px; background: var(--bg); }
+  .scout th.on { color: var(--accent); }
+  .scout td { padding: 9px 8px; border-bottom: 1px solid var(--line); }
+  .scout tr.us td { background: #ffb02014; }
+  .scout tr.partner td { background: #3d8bff12; }
+  .meter { display: inline-block; height: 6px; background: var(--accent); border-radius: 99px; vertical-align: middle; margin-inline-start: 8px; opacity: .7; }
+
+  /* חלונות */
+  dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 18px; padding: 0; width: min(760px, 94vw); }
+  dialog::backdrop { background: #000a; }
+  dialog .head { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+  dialog .head h3 { margin: 0; flex: 1; }
+  dialog .body { padding: 18px 20px; display: grid; gap: 16px; }
+  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  label { display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
+  .join { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; background: var(--panel-2); border-radius: 14px; padding: 14px; }
+  #qr { background: #fff; padding: 8px; border-radius: 10px; width: 176px; height: 176px; }
+  #qr img, #qr canvas { width: 160px !important; height: 160px !important; }
+  .code { font-size: 34px; font-weight: 800; letter-spacing: .12em; direction: ltr; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .stat { background: var(--panel-2); border-radius: 12px; padding: 12px; text-align: center; }
+  .stat b { display: block; font-size: 24px; }
+  .stat small { color: var(--muted); }
+  .overlay.queue { background: #2a1b00; }
+  .overlay.queue h1 { color: var(--accent); }
+  .overlay.queue button { background: var(--accent); color: var(--accent-ink); }
+  .banner { background: #3a2a07; border: 1px solid #6e5110; color: #ffd27a; padding: 8px 14px; border-radius: 10px; margin-bottom: 14px; display: none; }
+  .banner.show { display: block; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K" alt=""> מרכז הפיט</div>
+  <div class="event"><b id="evName">טוען…</b><small id="evSub"></small></div>
+  <div class="spacer"></div>
+  <div class="tabs" role="tablist">
+    <button class="on" data-view="board">לוח</button>
+    <button data-view="scout">סקאוטינג</button>
+  </div>
+  <span class="pill" id="conn"><span class="dot"></span> מתחבר</span>
+  <button id="fullBtn" title="מסך מלא (F11)">⛶</button>
+  <button class="primary" id="setBtn">הגדרות וחיבור טלפונים</button>
+</header>
+
+<main>
+  <div class="banner" id="banner"></div>
+
+  <section id="view-board" class="grid">
+    <div class="col-main stack">
+      <div id="hero" class="hero"></div>
+      <div class="panel">
+        <h2><span class="grow">המשחקים שלנו</span><span class="muted" id="record"></span></h2>
+        <table class="matches"><thead><tr><th>משחק</th><th>ברית</th><th>שותפים</th><th>יריבים</th><th>שעה</th><th>תוצאה</th></tr></thead><tbody id="ourMatches"></tbody></table>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="panel">
+        <h2><span class="grow">רשימת בדיקה לפני משחק</span><span id="checkCount" class="pill"></span><button class="ghost" id="checkReset">איפוס</button></h2>
+        <div class="bar" style="margin-bottom:8px"><i id="checkBar" style="width:0"></i></div>
+        <ul class="list" id="checklist"></ul>
+        <div class="muted" style="font-size:13px;margin-top:6px">מתאפסת לבד כשהמשחק הבא מתחלף</div>
+      </div>
+      <div class="panel">
+        <h2><span class="grow">סוללות</span><button id="addBatt">+ סוללה</button></h2>
+        <div class="suggest" id="battSuggest"></div>
+        <div class="batt" id="batteries"></div>
+        <div class="muted" style="font-size:13px;margin-top:8px">לחיצה מעבירה מצב: בטעינה ← מוכנה ← ברובוט ← משומשת</div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="panel">
+        <h2><span class="grow">צוות המגרש</span><button class="danger" id="alertAll">קריאה לכולם</button></h2>
+        <input id="alertReason" placeholder="סיבת הקריאה (לא חובה), למשל: להביא שלט" maxlength="80" style="margin-bottom:6px">
+        <ul class="list" id="members"></ul>
+      </div>
+      <div class="panel">
+        <h2>הודעות</h2>
+        <div class="chat" id="chat"></div>
+        <form class="send" id="sendForm">
+          <select id="sendTo"></select>
+          <input id="sendText" placeholder="כתוב הודעה…" autocomplete="off">
+          <button class="primary">שלח</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h2>יומן תיקונים</h2>
+        <form class="row" id="repairForm" style="margin-bottom:8px">
+          <input id="repairText" placeholder="מה צריך לתקן?" autocomplete="off">
+          <button>הוסף</button>
+        </form>
+        <ul class="list" id="repairs"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-scout" hidden>
+    <div class="panel">
+      <h2><span class="grow">כל הקבוצות באירוע</span><span class="muted">לחיצה על קבוצה פותחת נתוני עונה · נתונים מאתר FTCScout</span></h2>
+      <table class="scout"><thead><tr id="scoutHead"></tr></thead><tbody id="scoutBody"></tbody></table>
+    </div>
+  </section>
+</main>
+
+<div class="overlay queue" id="queueOverlay">
+  <h1 id="queueTitle">לתור!</h1>
+  <p id="queueSub"></p>
+  <button id="queueOk">הבנתי</button>
+</div>
+
+<dialog id="settings">
+  <div class="head"><h3>הגדרות</h3><button class="ghost" data-close>✕</button></div>
+  <div class="body">
+    <div class="join">
+      <div id="qr"></div>
+      <div class="stack">
+        <div class="muted">טלפונים מצטרפים בסריקת הקוד, או בכתובת:</div>
+        <div id="addrs" class="num" style="font-size:18px"></div>
+        <div class="muted">קוד הצטרפות</div>
+        <div class="row"><span class="code" id="joinCode"></span><button id="newCode">קוד חדש</button></div>
+      </div>
+    </div>
+    <div class="fields">
+      <label>מספר קבוצה<input id="sTeam" inputmode="numeric"></label>
+      <label>עונה (ריק = אוטומטי)<input id="sSeason" inputmode="numeric" placeholder="אוטומטי"></label>
+      <label>קוד אירוע (ריק = אוטומטי)<input id="sEvent" placeholder="אוטומטי" dir="ltr"></label>
+      <label>התראת תור כשנשארו<input id="sWarn" inputmode="numeric"></label>
+    </div>
+    <label>רשימת בדיקה, שורה לכל פריט<textarea id="sChecklist" rows="6"></textarea></label>
+    <label class="row" style="color:var(--text)"><input type="checkbox" id="sDemo" style="width:auto"> מצב הדגמה: מריץ אליפות ישראל 2026 מחדש, משחק חדש כל דקה ורבע</label>
+    <div class="stack">
+      <div class="muted" style="font-size:14px">חברי צוות מחוברים</div>
+      <ul class="list" id="sMembers"></ul>
+    </div>
+    <div class="row" style="justify-content:space-between;flex-wrap:wrap">
+      <div class="row">
+        <button id="clearMsgs" class="ghost">מחק את כל ההודעות</button>
+        <button id="refreshNow" class="ghost">רענן נתונים</button>
+      </div>
+      <button class="primary" id="saveSettings">שמור</button>
+    </div>
+    <div class="muted" style="font-size:13px">פתיחת מסך הפיט ממחשב אחר: <span class="num" id="adminLink"></span></div>
+  </div>
+</dialog>
+
+<dialog id="teamDlg">
+  <div class="head"><h3 id="tdTitle"></h3><button class="ghost" data-close>✕</button></div>
+  <div class="body" id="tdBody"></div>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// כלים משותפים למסך הפיט ולטלפון
+const Pit = (() => {
+  let token = null;
+  try { token = localStorage.getItem('pit-token'); } catch {}
+  const keyFromUrl = new URLSearchParams(location.search).get('key');
+
+  function authQS() {
+    if (keyFromUrl) return `key=${encodeURIComponent(keyFromUrl)}`;
+    if (token) return `token=${encodeURIComponent(token)}`;
+    return '';
+  }
+  function setToken(t) { token = t; try { t ? localStorage.setItem('pit-token', t) : localStorage.removeItem('pit-token'); } catch {} }
+
+  async function api(path, body) {
+    const sep = path.includes('?') ? '&' : '?';
+    const r = await fetch(`${path}${sep}${authQS()}`, body === undefined ? {} : {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { const e = new Error(data.error || r.status); e.status = r.status; throw e; }
+    return data;
+  }
+
+  function stream(handlers) {
+    const es = new EventSource(`/api/stream?${authQS()}`);
+    for (const [ev, fn] of Object.entries(handlers)) {
+      es.addEventListener(ev, (e) => { let d = {}; try { d = JSON.parse(e.data); } catch {} fn(d); });
+    }
+    es.onerror = () => handlers.down && handlers.down();
+    es.onopen = () => handlers.up && handlers.up();
+    return es;
+  }
+
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const time = (t) => t ? new Date(t).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
+  const ago = (t) => {
+    if (!t) return '';
+    const s = Math.round((Date.now() - t) / 1000);
+    if (s < 60) return 'עכשיו';
+    if (s < 3600) return `לפני ${Math.round(s / 60)} דק׳`;
+    return time(t);
+  };
+  const colorName = (c) => (c === 'red' ? 'אדומה' : 'כחולה');
+  const fixed = (v, n = 1) => (v == null ? '—' : Number(v).toFixed(n));
+
+  function teamsHtml(list, color, me) {
+    return list.map((n) => `<span class="tn ${color} ${n === me ? 'me' : ''}" data-team="${n}">${n}</span>`).join('');
+  }
+  function awayText(n) {
+    if (n === 0) return 'על המגרש עכשיו';
+    if (n === 1) return 'עוד משחק אחד';
+    return `עוד ${n} משחקים`;
+  }
+
+  // ---------- צליל ----------
+  let ctx = null, loop = null;
+  function unlockAudio() {
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') ctx.resume();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      g.gain.value = 0.0001; o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.02);
+    } catch {}
+  }
+  function beep(freq = 880, dur = 0.18, vol = 0.6) {
+    if (!ctx) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square'; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + dur);
+  }
+  function alarm(on, pattern = 'alarm') {
+    clearInterval(loop); loop = null;
+    if (!on) return;
+    const tick = () => {
+      if (pattern === 'alarm') { beep(988, 0.16); setTimeout(() => beep(740, 0.16), 200); }
+      else { beep(660, 0.12, 0.4); setTimeout(() => beep(880, 0.2, 0.4), 160); }
+    };
+    tick();
+    loop = setInterval(tick, pattern === 'alarm' ? 600 : 1400);
+  }
+
+  let toastTimer;
+  function toast(text) {
+    let el = document.querySelector('.toast');
+    if (!el) { el = document.createElement('div'); el.className = 'toast'; document.body.append(el); }
+    el.textContent = text; el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+  }
+
+  return { api, stream, esc, time, ago, colorName, fixed, teamsHtml, awayText, unlockAudio, beep, alarm, toast, setToken, get token() { return token; } };
+})();
+
+</script>
+<script>
+// ===== מצב הדגמה למסך הפיט: אין שרת, הכול קורה בתוך הקובץ =====
+(() => {
+  const D = {"team": 9662, "season": 2025, "demo": false, "event": {"code": "DEMO", "name": "אירוע הדגמה", "start": "", "end": "", "venue": "", "city": "עיר לדוגמה", "fields": 2}, "error": "", "updatedAt": 0, "totalMatches": 52, "playedMatches": 6, "ours": [{"key": "m0", "label": "מ׳3", "level": "Quals", "color": "red", "station": 1, "partners": [90116], "opponents": [90114, 90112], "time": null, "played": true, "our": 112, "their": 126, "result": "L", "away": null}, {"key": "m1", "label": "מ׳8", "level": "Quals", "color": "blue", "station": 2, "partners": [90116], "opponents": [90102, 90112], "time": null, "played": true, "our": 148, "their": 131, "result": "W", "away": null}, {"key": "m2", "label": "מ׳12", "level": "Quals", "color": "blue", "station": 1, "partners": [90109], "opponents": [90105, 90121], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 4}, {"key": "m3", "label": "מ׳17", "level": "Quals", "color": "red", "station": 1, "partners": [90119], "opponents": [90118, 90103], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 8}, {"key": "m4", "label": "מ׳21", "level": "Quals", "color": "red", "station": 1, "partners": [90114], "opponents": [90118, 90116], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 11}, {"key": "m5", "label": "מ׳26", "level": "Quals", "color": "blue", "station": 1, "partners": [90106], "opponents": [90104, 90121], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 15}, {"key": "m6", "label": "פ׳2", "level": "DoubleElim", "color": "red", "station": 1, "partners": [90105], "opponents": [90123, 90122], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 18}, {"key": "m7", "label": "פ׳3", "level": "DoubleElim", "color": "red", "station": 1, "partners": [90111], "opponents": [90101, 90122], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 19}, {"key": "m8", "label": "פ׳5", "level": "DoubleElim", "color": "red", "station": 1, "partners": [90119], "opponents": [90106, 90110], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 21}], "next": {"key": "m2", "label": "מ׳12", "level": "Quals", "color": "blue", "station": 1, "partners": [90109], "opponents": [90105, 90121], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 4}, "playingNow": false, "eventTeams": [{"number": 90110, "rank": 1, "wins": 5, "losses": 0, "ties": 1, "opr": 138.9, "auto": 32.5, "teleop": 107.9, "avg": 256.0}, {"number": 90119, "rank": 2, "wins": 5, "losses": 1, "ties": 0, "opr": 138.8, "auto": 36.8, "teleop": 103.1, "avg": 242.5}, {"number": 90114, "rank": 3, "wins": 4, "losses": 2, "ties": 0, "opr": 123.9, "auto": 18.6, "teleop": 102.4, "avg": 214.5}, {"number": 90121, "rank": 4, "wins": 6, "losses": 0, "ties": 0, "opr": 119.0, "auto": 25.6, "teleop": 93.6, "avg": 223.2}, {"number": 90113, "rank": 5, "wins": 5, "losses": 1, "ties": 0, "opr": 111.9, "auto": 21.2, "teleop": 88.0, "avg": 192.3}, {"number": 90112, "rank": 6, "wins": 4, "losses": 2, "ties": 0, "opr": 108.5, "auto": 30.6, "teleop": 72.3, "avg": 203.8}, {"number": 90102, "rank": 7, "wins": 4, "losses": 2, "ties": 0, "opr": 101.2, "auto": 28.7, "teleop": 66.7, "avg": 185.5}, {"number": 90101, "rank": 8, "wins": 5, "losses": 1, "ties": 0, "opr": 102.5, "auto": 34.3, "teleop": 73.8, "avg": 177.7}, {"number": 90107, "rank": 9, "wins": 3, "losses": 3, "ties": 0, "opr": 110.2, "auto": 34.9, "teleop": 71.8, "avg": 189.5}, {"number": 90109, "rank": 10, "wins": 3, "losses": 3, "ties": 0, "opr": 108.0, "auto": 10.4, "teleop": 99.4, "avg": 197.2}, {"number": 90106, "rank": 11, "wins": 4, "losses": 2, "ties": 0, "opr": 108.7, "auto": 36.3, "teleop": 69.6, "avg": 199.4}, {"number": 90103, "rank": 12, "wins": 4, "losses": 2, "ties": 0, "opr": 85.0, "auto": 27.0, "teleop": 63.3, "avg": 157.8}, {"number": 90116, "rank": 13, "wins": 2, "losses": 4, "ties": 0, "opr": 85.6, "auto": 39.3, "teleop": 46.2, "avg": 159.4}, {"number": 9662, "rank": 14, "wins": 3, "losses": 3, "ties": 0, "opr": 79.3, "auto": 21.4, "teleop": 62.8, "avg": 143.0}, {"number": 90104, "rank": 15, "wins": 2, "losses": 4, "ties": 0, "opr": 86.8, "auto": 12.5, "teleop": 78.3, "avg": 155.9}, {"number": 90123, "rank": 16, "wins": 2, "losses": 4, "ties": 0, "opr": 78.0, "auto": 38.1, "teleop": 34.3, "avg": 133.9}, {"number": 90120, "rank": 17, "wins": 2, "losses": 3, "ties": 1, "opr": 55.6, "auto": 10.1, "teleop": 40.5, "avg": 98.6}, {"number": 90118, "rank": 18, "wins": 2, "losses": 4, "ties": 0, "opr": 61.9, "auto": 38.5, "teleop": 28.0, "avg": 111.5}, {"number": 90115, "rank": 19, "wins": 1, "losses": 5, "ties": 0, "opr": 65.0, "auto": 8.9, "teleop": 59.9, "avg": 118.3}, {"number": 90108, "rank": 20, "wins": 1, "losses": 5, "ties": 0, "opr": 61.8, "auto": 10.6, "teleop": 55.3, "avg": 118.9}, {"number": 90105, "rank": 21, "wins": 0, "losses": 6, "ties": 0, "opr": 63.8, "auto": 12.2, "teleop": 55.2, "avg": 114.0}, {"number": 90117, "rank": 22, "wins": 0, "losses": 6, "ties": 0, "opr": 52.1, "auto": 23.6, "teleop": 26.5, "avg": 100.1}, {"number": 90111, "rank": 23, "wins": 0, "losses": 6, "ties": 0, "opr": 52.7, "auto": 9.3, "teleop": 45.8, "avg": 101.0}, {"number": 90122, "rank": 24, "wins": 0, "losses": 6, "ties": 0, "opr": 49.9, "auto": 10.2, "teleop": 34.4, "avg": 88.0}], "checklist": [{"text": "סוללה טעונה ומחוברת", "done": true}, {"text": "רכזת הנהג טעונה ומחוברת לרובוט", "done": true}, {"text": "שלטים מחוברים ומשויכים", "done": false}, {"text": "נבחרה תוכנית אוטונומית נכונה", "done": false}, {"text": "ברגים ומחברים נבדקו", "done": false}, {"text": "סימון הברית על הרובוט", "done": false}], "batteries": [{"id": "b1", "name": "סוללה 1", "status": "ready", "voltage": 13.4, "uses": 3}, {"id": "b2", "name": "סוללה 2", "status": "robot", "voltage": 12.9, "uses": 4}, {"id": "b3", "name": "סוללה 3", "status": "charging", "voltage": null, "uses": 1}, {"id": "b4", "name": "סוללה 4", "status": "used", "voltage": 12.1, "uses": 5}, {"id": "b5", "name": "סוללה 5", "status": "ready", "voltage": 13.6, "uses": 2}], "repairs": [{"id": "r1", "text": "להחליף גלגל שמאלי קדמי", "by": "הפיט", "at": 0, "done": false}, {"id": "r2", "text": "להדק את הברגים של הזרוע", "by": "חבר צוות", "at": 0, "done": true}], "members": [{"id": "u1", "name": "נועה", "online": true, "lastSeen": 0, "alert": {"state": "ack", "at": 0, "ackAt": 0}}, {"id": "u2", "name": "עומר", "online": true, "lastSeen": 0, "alert": {"state": "none"}}, {"id": "u3", "name": "איתי", "online": false, "lastSeen": 0, "alert": {"state": "none"}}], "messages": [{"id": "m1", "from": "pit", "to": "all", "text": "כולם לחזור לפיט אחרי המשחק, יש שינוי באוטונומי", "at": 0, "readBy": ["u1", "u2"]}, {"id": "m2", "from": "u1", "fromName": "נועה", "to": "pit", "text": "בדרך!", "at": 0, "readBy": []}, {"id": "m3", "from": "u2", "fromName": "עומר", "to": "pit", "text": "השופט ביקש לראות את הרובוט בבדיקה", "at": 0, "readBy": []}], "settings": {"team": 9662, "season": null, "eventCode": "", "joinCode": "482913", "queueWarnAt": 2, "demo": false, "checklist": ["סוללה טעונה ומחוברת", "רכזת הנהג טעונה ומחוברת לרובוט", "שלטים מחוברים ומשויכים", "נבחרה תוכנית אוטונומית נכונה", "ברגים ומחברים נבדקו", "סימון הברית על הרובוט"]}, "adminKey": "demo-key", "addresses": ["http://192.168.1.20:8765"], "_teams": {"90110": {"info": {"number": 90110, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2016}, "quick": {"tot": {"value": 150.9, "rank": 1229}, "auto": {"value": 32.5, "rank": 7534}, "dc": {"value": 107.9, "rank": 6943}, "eg": {"value": 12.0, "rank": 7256}, "count": 8000}}, "90119": {"info": {"number": 90119, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2016}, "quick": {"tot": {"value": 148.5, "rank": 834}, "auto": {"value": 36.8, "rank": 4440}, "dc": {"value": 103.1, "rank": 3110}, "eg": {"value": 9.7, "rank": 281}, "count": 8000}}, "90114": {"info": {"number": 90114, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2020}, "quick": {"tot": {"value": 129.20000000000002, "rank": 2759}, "auto": {"value": 18.6, "rank": 5507}, "dc": {"value": 102.4, "rank": 2955}, "eg": {"value": 5.3, "rank": 1705}, "count": 8000}}, "90121": {"info": {"number": 90121, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2017}, "quick": {"tot": {"value": 130.5, "rank": 4361}, "auto": {"value": 25.6, "rank": 1719}, "dc": {"value": 93.6, "rank": 2687}, "eg": {"value": 11.5, "rank": 2311}, "count": 8000}}, "90113": {"info": {"number": 90113, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2020}, "quick": {"tot": {"value": 114.2, "rank": 1231}, "auto": {"value": 21.2, "rank": 4109}, "dc": {"value": 88.0, "rank": 444}, "eg": {"value": 2.3, "rank": 7288}, "count": 8000}}, "90112": {"info": {"number": 90112, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2022}, "quick": {"tot": {"value": 115.1, "rank": 4143}, "auto": {"value": 30.6, "rank": 6141}, "dc": {"value": 72.3, "rank": 1491}, "eg": {"value": 6.6, "rank": 6944}, "count": 8000}}, "90102": {"info": {"number": 90102, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2020}, "quick": {"tot": {"value": 109.60000000000001, "rank": 5282}, "auto": {"value": 28.7, "rank": 6662}, "dc": {"value": 66.7, "rank": 6691}, "eg": {"value": 8.4, "rank": 1067}, "count": 8000}}, "90101": {"info": {"number": 90101, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2022}, "quick": {"tot": {"value": 106.6, "rank": 4446}, "auto": {"value": 34.3, "rank": 5907}, "dc": {"value": 73.8, "rank": 5356}, "eg": {"value": 4.1, "rank": 72}, "count": 8000}}, "90107": {"info": {"number": 90107, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2017}, "quick": {"tot": {"value": 119.2, "rank": 3455}, "auto": {"value": 34.9, "rank": 219}, "dc": {"value": 71.8, "rank": 500}, "eg": {"value": 9.0, "rank": 4148}, "count": 8000}}, "90109": {"info": {"number": 90109, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2022}, "quick": {"tot": {"value": 110.4, "rank": 6137}, "auto": {"value": 10.4, "rank": 7799}, "dc": {"value": 99.4, "rank": 1282}, "eg": {"value": 2.4, "rank": 5871}, "count": 8000}}, "90106": {"info": {"number": 90106, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2024}, "quick": {"tot": {"value": 115.9, "rank": 3035}, "auto": {"value": 36.3, "rank": 6230}, "dc": {"value": 69.6, "rank": 5686}, "eg": {"value": 7.2, "rank": 1909}, "count": 8000}}, "90103": {"info": {"number": 90103, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2022}, "quick": {"tot": {"value": 91.4, "rank": 2935}, "auto": {"value": 27.0, "rank": 4577}, "dc": {"value": 63.3, "rank": 1929}, "eg": {"value": 6.4, "rank": 6222}, "count": 8000}}, "90116": {"info": {"number": 90116, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2021}, "quick": {"tot": {"value": 94.5, "rank": 567}, "auto": {"value": 39.3, "rank": 94}, "dc": {"value": 46.2, "rank": 3850}, "eg": {"value": 8.9, "rank": 3018}, "count": 8000}}, "9662": {"info": {"number": 9662, "name": "Apollo", "city": "עיר לדוגמה", "rookieYear": 2024}, "quick": {"tot": {"value": 86.6, "rank": 3355}, "auto": {"value": 21.4, "rank": 5291}, "dc": {"value": 62.8, "rank": 3162}, "eg": {"value": 7.3, "rank": 7838}, "count": 8000}}, "90104": {"info": {"number": 90104, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2016}, "quick": {"tot": {"value": 99.1, "rank": 267}, "auto": {"value": 12.5, "rank": 4983}, "dc": {"value": 78.3, "rank": 6821}, "eg": {"value": 12.3, "rank": 7480}, "count": 8000}}, "90123": {"info": {"number": 90123, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2015}, "quick": {"tot": {"value": 86.0, "rank": 5893}, "auto": {"value": 38.1, "rank": 6481}, "dc": {"value": 34.3, "rank": 5317}, "eg": {"value": 8.0, "rank": 4117}, "count": 8000}}, "90120": {"info": {"number": 90120, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2016}, "quick": {"tot": {"value": 66.7, "rank": 1192}, "auto": {"value": 10.1, "rank": 4215}, "dc": {"value": 40.5, "rank": 1439}, "eg": {"value": 11.1, "rank": 6998}, "count": 8000}}, "90118": {"info": {"number": 90118, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2017}, "quick": {"tot": {"value": 65.8, "rank": 4694}, "auto": {"value": 38.5, "rank": 1100}, "dc": {"value": 28.0, "rank": 6245}, "eg": {"value": 3.9, "rank": 964}, "count": 8000}}, "90115": {"info": {"number": 90115, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2023}, "quick": {"tot": {"value": 78.2, "rank": 710}, "auto": {"value": 8.9, "rank": 6544}, "dc": {"value": 59.9, "rank": 6282}, "eg": {"value": 13.2, "rank": 5560}, "count": 8000}}, "90108": {"info": {"number": 90108, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2023}, "quick": {"tot": {"value": 71.1, "rank": 3325}, "auto": {"value": 10.6, "rank": 2665}, "dc": {"value": 55.3, "rank": 5240}, "eg": {"value": 9.3, "rank": 1945}, "count": 8000}}, "90105": {"info": {"number": 90105, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2020}, "quick": {"tot": {"value": 72.7, "rank": 6572}, "auto": {"value": 12.2, "rank": 3377}, "dc": {"value": 55.2, "rank": 3709}, "eg": {"value": 8.9, "rank": 4015}, "count": 8000}}, "90117": {"info": {"number": 90117, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2022}, "quick": {"tot": {"value": 54.6, "rank": 5632}, "auto": {"value": 23.6, "rank": 6787}, "dc": {"value": 26.5, "rank": 3769}, "eg": {"value": 2.5, "rank": 2839}, "count": 8000}}, "90111": {"info": {"number": 90111, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2023}, "quick": {"tot": {"value": 58.7, "rank": 1559}, "auto": {"value": 9.3, "rank": 4179}, "dc": {"value": 45.8, "rank": 7487}, "eg": {"value": 6.0, "rank": 960}, "count": 8000}}, "90122": {"info": {"number": 90122, "name": "קבוצה לדוגמה", "city": "עיר לדוגמה", "rookieYear": 2016}, "quick": {"tot": {"value": 60.599999999999994, "rank": 5822}, "auto": {"value": 10.2, "rank": 6374}, "dc": {"value": 34.4, "rank": 6378}, "eg": {"value": 10.7, "rank": 202}, "count": 8000}}}};
+  const TEAMS = D._teams; delete D._teams;
+  const now = Date.now();
+  D.messages.forEach((m, i) => (m.at = now - (D.messages.length - i) * 3 * 60000));
+  D.repairs.forEach((r, i) => (r.at = now - (i + 1) * 11 * 60000));
+  D.ours.forEach((m, i) => (m.time = new Date(now + (i - 2) * 22 * 60000).toISOString()));
+  D.members.forEach((m) => { m.lastSeen = now; if (m.alert?.state === 'ack') { m.alert.at = now - 5 * 60000; m.alert.ackAt = now - 4 * 60000; } });
+  D.updatedAt = now;
+  D.settings.queueWarnAt = 2;
+  let handlers = {};
+  let n = 1;
+  const id = () => 'd' + n++;
+  const fire = (ev, data) => handlers[ev] && handlers[ev](data || {});
+  const member = (mid) => D.members.find((m) => m.id === mid);
+
+  function memberSays(m, text, delay = 1500) {
+    setTimeout(() => {
+      D.messages.push({ id: id(), from: m.id, fromName: m.name, to: 'pit', text, at: Date.now(), readBy: [] });
+      fire('message', { from: m.name, to: 'pit' });
+    }, delay);
+  }
+
+  function advance() {
+    const next = D.ours.find((m) => !m.played);
+    if (!next) return Pit.toast('אין עוד משחקים');
+    if (next.away > 0) {
+      D.ours.forEach((m) => { if (!m.played) m.away = Math.max(0, m.away - 1); });
+    } else {
+      next.played = true;
+      next.our = 90 + Math.floor(Math.random() * 140);
+      next.their = 90 + Math.floor(Math.random() * 140);
+      next.result = next.our > next.their ? 'W' : next.our < next.their ? 'L' : 'T';
+      next.away = null;
+      D.ours.forEach((m) => { if (!m.played) m.away = Math.max(0, m.away - 1); });
+      D.checklist.forEach((c) => (c.done = false));
+    }
+    D.next = D.ours.find((m) => !m.played) || null;
+    D.playingNow = !!(D.next && D.next.away === 0);
+    D.playedMatches = Math.min(D.totalMatches, D.playedMatches + 1);
+    D.updatedAt = Date.now();
+    fire('change');
+  }
+
+  function ring(m, reason) {
+    m.alert = { state: 'ringing', at: Date.now(), reason };
+    if (!m.online) return;
+    // חבר צוות מחובר "עונה" אחרי כמה שניות
+    setTimeout(() => {
+      if (m.alert.state !== 'ringing') return;
+      m.alert = { ...m.alert, state: 'ack', ackAt: Date.now() };
+      fire('ack', { name: m.name });
+    }, 3000 + Math.random() * 2500);
+  }
+
+  Pit.api = async (path, body) => {
+    await new Promise((r) => setTimeout(r, 60));
+    const p = path.split('?')[0];
+    const tm = p.match(/^\/api\/team\/(\d+)$/);
+    if (tm) return TEAMS[tm[1]] || { info: null, quick: null };
+    if (p === '/api/state') return JSON.parse(JSON.stringify(D));
+    if (p === '/api/check') {
+      if (body.reset) D.checklist.forEach((c) => (c.done = false));
+      else D.checklist[body.index].done = !!body.done;
+    }
+    if (p === '/api/alert') {
+      const list = body.id === 'all' ? D.members : [member(body.id)].filter(Boolean);
+      list.forEach((m) => ring(m, body.reason || 'בוא לפיט עכשיו!'));
+      if (list.some((m) => !m.online)) setTimeout(() => Pit.toast('חבר צוות לא מחובר לא יקבל את הקריאה עד שיתחבר'), 900);
+    }
+    if (p === '/api/alert/cancel') { const m = member(body.id); if (m) m.alert = { state: 'none' }; }
+    if (p === '/api/message') {
+      const msg = { id: id(), from: 'pit', to: body.to || 'all', text: body.text, at: Date.now(), readBy: [] };
+      D.messages.push(msg);
+      const readers = msg.to === 'all' ? D.members.filter((m) => m.online) : [member(msg.to)].filter((m) => m && m.online);
+      readers.forEach((m, i) => setTimeout(() => { msg.readBy.push(m.id); fire('change'); }, 1200 + i * 900));
+      if (readers[0]) memberSays(readers[0], ['קיבלתי 👍', 'בדרך!', 'עוד 2 דקות'][Math.floor(Math.random() * 3)], 3200);
+    }
+    if (p === '/api/read') D.messages.forEach((m) => body.ids.includes(m.id) && !m.readBy.includes('pit') && m.readBy.push('pit'));
+    if (p === '/api/battery') {
+      if (body.action === 'add') D.batteries.push({ id: id(), name: body.name, status: 'charging', voltage: null, uses: 0 });
+      const b = D.batteries.find((x) => x.id === body.id);
+      if (b && body.action === 'delete') D.batteries = D.batteries.filter((x) => x !== b);
+      if (b && body.action === 'status') {
+        if (body.status === 'robot') { D.batteries.forEach((o) => o.status === 'robot' && o !== b && (o.status = 'used')); b.uses++; }
+        b.status = body.status;
+      }
+      if (b && body.action === 'voltage') { const v = Number(body.voltage); b.voltage = v > 0 && v < 20 ? Math.round(v * 100) / 100 : null; }
+    }
+    if (p === '/api/repair') {
+      if (body.action === 'add') D.repairs.unshift({ id: id(), text: body.text, by: 'הפיט', at: Date.now(), done: false });
+      const r = D.repairs.find((x) => x.id === body.id);
+      if (r && body.action === 'toggle') r.done = !r.done;
+      if (r && body.action === 'delete') D.repairs = D.repairs.filter((x) => x !== r);
+    }
+    if (p === '/api/settings') {
+      const s = D.settings;
+      if (body.newJoinCode) s.joinCode = String(Math.floor(100000 + Math.random() * 900000));
+      if (Array.isArray(body.checklist)) {
+        const list = body.checklist.map((x) => x.trim()).filter(Boolean);
+        s.checklist = list;
+        D.checklist = list.map((text, i) => ({ text, done: D.checklist[i]?.text === text && D.checklist[i].done }));
+      }
+      if (body.queueWarnAt !== undefined) s.queueWarnAt = Math.max(0, Math.min(10, parseInt(body.queueWarnAt, 10) || 0));
+      if (body.team && Number(body.team) !== D.team) setTimeout(() => Pit.toast('בהדגמה הקבוצה קבועה. בגרסה האמיתית הנתונים מתחלפים לקבוצה החדשה'), 400);
+      if (body.removeMember) D.members = D.members.filter((m) => m.id !== body.removeMember);
+      if (body.clearMessages) D.messages = [];
+      setTimeout(() => fire('change'), 100);
+    }
+    if (p === '/api/refresh') setTimeout(() => { D.updatedAt = Date.now(); fire('change'); }, 500);
+    return { ok: true };
+  };
+  Pit.stream = (h) => { handlers = h; setTimeout(() => h.up && h.up(), 200); return { close() {} }; };
+
+  // פאנל הדגמה
+  window.addEventListener('DOMContentLoaded', () => {
+    const css = document.createElement('style');
+    css.textContent = `
+      .demo-fab { position: fixed; bottom: 20px; inset-inline-start: 20px; z-index: 40; background: #ffb020; color: #1a1200; border: 0; border-radius: 99px; padding: 10px 18px; font-weight: 700; box-shadow: 0 6px 20px #0008; }
+      .demo-menu { position: fixed; bottom: 70px; inset-inline-start: 20px; z-index: 40; background: var(--panel); border: 1px solid var(--accent); border-radius: 14px; padding: 8px; display: none; flex-direction: column; gap: 6px; width: 270px; box-shadow: 0 10px 30px #000a; }
+      .demo-menu.show { display: flex; }
+      .demo-menu small { color: var(--muted); padding: 4px 6px; }
+      .demo-menu button { text-align: start; }`;
+    document.head.append(css);
+    const fab = Object.assign(document.createElement('button'), { className: 'demo-fab', textContent: '▶ הדגמה' });
+    const menu = Object.assign(document.createElement('div'), { className: 'demo-menu' });
+    menu.innerHTML = `
+      <small>זו הדגמה בלבד, בלי שרת. נסו:</small>
+      <button data-d="adv">⏩ להתקדם משחק (עד התראת התור)</button>
+      <button data-d="msg">💬 חבר צוות שולח הודעה</button>
+      <button data-d="join">📱 טלפון חדש מתחבר</button>
+      <button data-d="toggle">🔌 איתי מתחבר או מתנתק</button>
+      <small>וגם: לחצו "קריאה" ליד חבר צוות, על מספר קבוצה, על סוללה, ועל לשונית הסקאוטינג</small>`;
+    document.body.append(fab, menu);
+    fab.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('show'); };
+    const names = ['רוני', 'מאיה', 'עידו', 'תמר', 'אורי'];
+    menu.onclick = (e) => {
+      const a = e.target.closest('[data-d]')?.dataset.d;
+      if (!a) return;
+      menu.classList.remove('show');
+      Pit.unlockAudio();
+      if (a === 'adv') advance();
+      if (a === 'msg') {
+        const on = D.members.filter((m) => m.online);
+        if (!on.length) return Pit.toast('אין חברי צוות מחוברים');
+        memberSays(on[Math.floor(Math.random() * on.length)], ['צריך עוד אזיקונים', 'השופט ביקש לראות את הרובוט', 'אנחנו בתור', 'הסוללה ברובוט נראית חלשה'][Math.floor(Math.random() * 4)], 200);
+      }
+      if (a === 'join') {
+        const name = names.find((x) => !D.members.some((m) => m.name === x));
+        if (!name) return Pit.toast('כולם כבר מחוברים');
+        D.members.push({ id: id(), name, online: true, lastSeen: Date.now(), alert: { state: 'none' } });
+        Pit.toast(`${name} התחבר/ה`); fire('change');
+      }
+      if (a === 'toggle') {
+        const m = D.members.find((x) => x.name === 'איתי');
+        if (!m) return Pit.toast('איתי נותק מהרשימה');
+        m.online = !m.online; Pit.toast(m.online ? 'איתי מחובר' : 'איתי התנתק'); fire('change');
+      }
+    };
+    document.addEventListener('click', () => menu.classList.remove('show'));
+  });
+})();
+
+</script>
+<script>
+const { api, esc, time, ago, colorName, fixed, teamsHtml, awayText } = Pit;
+const $ = (s) => document.querySelector(s);
+let S = null;
+let scoutSort = { key: 'opr', dir: -1 };
+let warnedKey = null;
+
+// ---------- טעינה ----------
+let loading = false, again = false;
+async function load() {
+  if (loading) { again = true; return; }
+  loading = true;
+  try { S = await api('/api/state'); render(); }
+  catch (e) { $('#banner').textContent = 'אין חיבור לשרת הפיט'; $('#banner').classList.add('show'); }
+  loading = false;
+  if (again) { again = false; load(); }
+}
+
+function render() {
+  $('#banner').classList.toggle('show', !!(S.error || S.demo));
+  $('#banner').textContent = S.error || (S.demo ? 'מצב הדגמה פעיל: הנתונים הם של אליפות ישראל מהעונה הקודמת, ומשחק חדש "נגמר" כל דקה ורבע.' : '');
+  if (S.event) {
+    $('#evName').textContent = `${S.team} · ${S.event.name}`;
+    $('#evSub').textContent = `${S.event.city || ''} · ${S.playedMatches}/${S.totalMatches} משחקים שוחקו · עודכן ${time(S.updatedAt)}`;
+  } else {
+    $('#evName').textContent = `${S.team} · לא נמצא אירוע`;
+    $('#evSub').textContent = S.season ? `אין לקבוצה אירועים רשומים בעונת ${S.season}` : '';
+  }
+  renderHero(); renderMatches(); renderChecklist(); renderBatteries(); renderMembers(); renderChat(); renderRepairs();
+  if (!$('#view-scout').hidden) renderScout();
+  checkQueue();
+}
+
+function renderHero() {
+  const n = S.next, h = $('#hero');
+  if (!n) {
+    h.className = 'hero';
+    h.innerHTML = S.ours.length
+      ? '<div class="top">סיימנו את כל המשחקים באירוע</div><div class="big"><span class="label">🏁</span></div>'
+      : `<div class="top">המשחק הבא</div><div class="big"><span class="alliance">עוד אין לוח משחקים</span></div><div class="muted">הלוח יופיע לבד ברגע שהשופטים יפרסמו אותו.</div>`;
+    return;
+  }
+  h.className = `hero ${n.color} ${n.away === 0 ? 'now' : ''}`;
+  h.innerHTML = `
+    <div class="top"><span>המשחק הבא</span>${n.time ? `<span>· ${time(n.time)}</span>` : ''}</div>
+    <div class="big">
+      <span class="label num">${esc(n.label)}</span>
+      <span class="alliance">ברית ${colorName(n.color)}${n.station ? ` · עמדה ${n.station}` : ''}</span>
+      <div class="away"><b class="num">${n.away}</b><small>${n.away === 0 ? 'על המגרש!' : 'משחקים לפנינו'}</small></div>
+    </div>
+    <div class="vs">
+      <div class="side"><small>איתנו</small><div class="teams">${teamsHtml([S.team, ...n.partners], n.color, S.team)}</div></div>
+      <b class="muted">נגד</b>
+      <div class="side"><small>יריבים</small><div class="teams">${teamsHtml(n.opponents, n.color === 'red' ? 'blue' : 'red')}</div></div>
+    </div>`;
+}
+
+function renderMatches() {
+  const w = S.ours.filter((m) => m.result === 'W').length, l = S.ours.filter((m) => m.result === 'L').length, t = S.ours.filter((m) => m.result === 'T').length;
+  $('#record').textContent = S.ours.length ? `${w}-${l}-${t} (נ-ה-ת)` : '';
+  $('#ourMatches').innerHTML = S.ours.map((m) => `
+    <tr class="${S.next && m.key === S.next.key ? 'next' : ''}">
+      <td><b class="num">${esc(m.label)}</b></td>
+      <td><span class="pill ${m.color}">${colorName(m.color)}</span></td>
+      <td><div class="teams">${teamsHtml(m.partners, m.color)}</div></td>
+      <td><div class="teams">${teamsHtml(m.opponents, m.color === 'red' ? 'blue' : 'red')}</div></td>
+      <td class="muted num">${time(m.time)}</td>
+      <td>${m.played ? `<span class="res ${m.result}">${{ W: 'ניצחון', L: 'הפסד', T: 'תיקו' }[m.result] || ''}</span> <span class="num muted">${m.our ?? ''}:${m.their ?? ''}</span>` : `<span class="muted">${awayText(m.away)}</span>`}</td>
+    </tr>`).join('') || '<tr><td colspan="6" class="empty">אין משחקים עדיין</td></tr>';
+}
+
+function renderChecklist() {
+  const done = S.checklist.filter((c) => c.done).length;
+  $('#checkCount').textContent = `${done}/${S.checklist.length}`;
+  $('#checkCount').className = `pill ${done === S.checklist.length && done ? 'green' : ''}`;
+  $('#checkBar').style.width = `${S.checklist.length ? (done / S.checklist.length) * 100 : 0}%`;
+  $('#checklist').innerHTML = S.checklist.map((c, i) => `<li class="check ${c.done ? 'done' : ''}" data-i="${i}"><span class="box"></span><span>${esc(c.text)}</span></li>`).join('');
+}
+
+const BSTAT = { charging: 'בטעינה', ready: 'מוכנה', robot: 'ברובוט', used: 'משומשת' };
+const BNEXT = { charging: 'ready', ready: 'robot', robot: 'used', used: 'charging' };
+function renderBatteries() {
+  const ready = S.batteries.filter((b) => b.status === 'ready').sort((a, b) => a.uses - b.uses);
+  const inRobot = S.batteries.find((b) => b.status === 'robot');
+  $('#battSuggest').innerHTML = !S.batteries.length ? '<span class="muted">הוסיפו את הסוללות שלכם כדי לעקוב אחרי הסבב</span>'
+    : `${inRobot ? `ברובוט: <b>${esc(inRobot.name)}</b>. ` : '<b style="color:var(--red)">אין סוללה ברובוט.</b> '}${ready.length ? `הבאה בתור: <b>${esc(ready[0].name)}</b>` : '<span style="color:var(--accent)">אין סוללה מוכנה!</span>'}`;
+  $('#batteries').innerHTML = S.batteries.map((b) => `
+    <div class="bcard ${b.status}" data-id="${b.id}">
+      <button class="x" data-del="${b.id}" title="מחק">✕</button>
+      <b>${esc(b.name)}</b>
+      <small>${BSTAT[b.status]} · ${b.uses} שימושים</small>
+      <div><small class="num" data-volt="${b.id}">${b.voltage ? b.voltage + 'V' : 'מתח?'}</small></div>
+    </div>`).join('');
+}
+
+function renderMembers() {
+  const list = S.members.map((m) => {
+    const a = m.alert?.state;
+    const st = a === 'ringing' ? '<span class="pill red ring">מצלצל…</span>'
+      : a === 'ack' ? `<span class="pill green">בדרך ✓ ${ago(m.alert.ackAt)}</span>` : '';
+    return `<li class="member"><span class="dot ${m.online ? 'on' : ''}" title="${m.online ? 'מחובר' : 'לא מחובר'}"></span>
+      <span class="name">${esc(m.name)}</span>${st}
+      ${a === 'ringing' ? `<button data-cancel="${m.id}">בטל</button>` : `<button class="danger" data-alert="${m.id}">קריאה</button>`}</li>`;
+  }).join('');
+  $('#members').innerHTML = list || '<li class="empty">עוד אף אחד לא התחבר. פתחו את ההגדרות וסרקו את הקוד מהטלפון.</li>';
+  $('#alertAll').disabled = !S.members.length;
+  const sel = $('#sendTo'), cur = sel.value;
+  sel.innerHTML = '<option value="all">לכולם</option>' + S.members.map((m) => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
+  sel.value = [...sel.options].some((o) => o.value === cur) ? cur : 'all';
+}
+
+function renderChat() {
+  const names = Object.fromEntries(S.members.map((m) => [m.id, m.name]));
+  const box = $('#chat'), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  box.innerHTML = S.messages.map((m) => {
+    const mine = m.from === 'pit';
+    const meta = mine
+      ? `אל ${m.to === 'all' ? 'כולם' : esc(names[m.to] || '?')} · ${time(m.at)} · ${m.readBy.length ? `נקרא${m.to === 'all' ? ` (${m.readBy.length})` : ''} ✓✓` : 'נשלח ✓'}`
+      : `${esc(m.fromName || names[m.from] || '?')} · ${time(m.at)}`;
+    return `<div class="msg ${mine ? 'mine' : ''}">${esc(m.text)}<small>${meta}</small></div>`;
+  }).join('') || '<div class="empty">אין הודעות</div>';
+  if (atBottom) box.scrollTop = box.scrollHeight;
+  const unread = S.messages.filter((m) => m.from !== 'pit' && !m.readBy.includes('pit')).map((m) => m.id);
+  if (unread.length && document.visibilityState === 'visible') api('/api/read', { ids: unread });
+}
+
+function renderRepairs() {
+  $('#repairs').innerHTML = S.repairs.map((r) => `
+    <li class="check ${r.done ? 'done' : ''}" data-repair="${r.id}"><span class="box"></span>
+      <span style="flex:1">${esc(r.text)}<br><small class="muted">${esc(r.by)} · ${time(r.at)}</small></span>
+      <button class="ghost" data-rdel="${r.id}" title="מחק">✕</button></li>`).join('') || '<li class="empty">אין תיקונים פתוחים</li>';
+}
+
+// ---------- סקאוטינג ----------
+const COLS = [
+  ['rank', 'דירוג', 1], ['number', 'קבוצה', 1], ['record', 'נ-ה-ת', 0], ['opr', 'תרומה משוערת', -1],
+  ['auto', 'אוטונומי', -1], ['teleop', 'שליטה ידנית', -1], ['avg', 'ממוצע ברית', -1],
+];
+function renderScout() {
+  $('#scoutHead').innerHTML = COLS.map(([k, t]) => `<th data-sort="${k}" class="${scoutSort.key === k ? 'on' : ''}">${t}${scoutSort.key === k ? (scoutSort.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('');
+  const partners = new Set(S.ours.flatMap((m) => m.partners));
+  const max = Math.max(1, ...S.eventTeams.map((t) => t.opr || 0));
+  const rows = [...S.eventTeams].sort((a, b) => {
+    const k = scoutSort.key; if (k === 'record') return 0;
+    const av = a[k] ?? (scoutSort.dir > 0 ? Infinity : -Infinity), bv = b[k] ?? (scoutSort.dir > 0 ? Infinity : -Infinity);
+    return (av - bv) * scoutSort.dir;
+  });
+  $('#scoutBody').innerHTML = rows.map((t) => `
+    <tr class="${t.number === S.team ? 'us' : partners.has(t.number) ? 'partner' : ''}">
+      <td class="num">${t.rank ?? '—'}</td>
+      <td><span class="tn" data-team="${t.number}">${t.number}</span></td>
+      <td class="num">${t.wins}-${t.losses}-${t.ties}</td>
+      <td><span class="num">${fixed(t.opr)}</span><span class="meter" style="width:${((t.opr || 0) / max) * 80}px"></span></td>
+      <td class="num">${fixed(t.auto)}</td><td class="num">${fixed(t.teleop)}</td><td class="num">${fixed(t.avg)}</td>
+    </tr>`).join('') || '<tr><td colspan="7" class="empty">אין נתונים לאירוע הזה עדיין</td></tr>';
+}
+
+async function openTeam(n) {
+  $('#tdTitle').textContent = `קבוצה ${n}`;
+  $('#tdBody').innerHTML = '<div class="muted">טוען…</div>';
+  $('#teamDlg').showModal();
+  const ev = S.eventTeams?.find((t) => t.number === n);
+  try {
+    const d = await api(`/api/team/${n}`);
+    const q = d.quick;
+    if (d.info) $('#tdTitle').textContent = `${n} · ${d.info.name}`;
+    $('#tdBody').innerHTML = `
+      ${d.info ? `<div class="muted">${esc(d.info.city || '')}${d.info.rookieYear ? ` · מאז ${d.info.rookieYear}` : ''}</div>` : ''}
+      ${ev ? `<div><b>באירוע הזה</b></div><div class="stats">
+        <div class="stat"><b class="num">${ev.rank ?? '—'}</b><small>דירוג</small></div>
+        <div class="stat"><b class="num">${fixed(ev.opr)}</b><small>תרומה משוערת</small></div>
+        <div class="stat"><b class="num">${fixed(ev.auto)}</b><small>אוטונומי</small></div>
+        <div class="stat"><b class="num">${fixed(ev.teleop)}</b><small>שליטה ידנית</small></div></div>` : ''}
+      <div><b>כל העונה</b> <span class="muted">(מתוך ${q?.count ?? '—'} קבוצות בעולם)</span></div>
+      ${q ? `<div class="stats">
+        <div class="stat"><b class="num">${fixed(q.tot.value)}</b><small>סה״כ · מקום ${q.tot.rank}</small></div>
+        <div class="stat"><b class="num">${fixed(q.auto.value)}</b><small>אוטונומי · מקום ${q.auto.rank}</small></div>
+        <div class="stat"><b class="num">${fixed(q.dc.value)}</b><small>שליטה ידנית · מקום ${q.dc.rank}</small></div>
+        <div class="stat"><b class="num">${fixed(q.eg.value)}</b><small>סיום · מקום ${q.eg.rank}</small></div></div>` : '<div class="muted">אין עדיין נתוני עונה לקבוצה</div>'}`;
+  } catch { $('#tdBody').innerHTML = '<div class="muted">לא הצלחתי לטעון את נתוני הקבוצה</div>'; }
+}
+
+// ---------- התראת תור ----------
+function checkQueue() {
+  const n = S.next;
+  if (!n || n.away > S.settings.queueWarnAt || warnedKey === n.key) return;
+  warnedKey = n.key;
+  $('#queueTitle').textContent = n.away === 0 ? 'אנחנו על המגרש!' : `עוד ${n.away === 1 ? 'משחק אחד' : n.away + ' משחקים'} — לתור!`;
+  $('#queueSub').textContent = `משחק ${n.label} · ברית ${colorName(n.color)}${n.station ? ` · עמדה ${n.station}` : ''}`;
+  $('#queueOverlay').classList.add('show');
+  Pit.alarm(true, 'chime');
+  setTimeout(() => Pit.alarm(false), 8000);
+  flashTitle();
+  try { if (Notification.permission === 'granted') new Notification('מרכז הפיט', { body: $('#queueTitle').textContent, requireInteraction: true }); } catch {}
+}
+let titleTimer;
+function flashTitle() {
+  clearInterval(titleTimer); let i = 0;
+  titleTimer = setInterval(() => { document.title = i++ % 2 ? '⚠ לתור!' : 'מרכז הפיט'; if (i > 40) { clearInterval(titleTimer); document.title = 'מרכז הפיט'; } }, 800);
+}
+$('#queueOk').onclick = () => { $('#queueOverlay').classList.remove('show'); Pit.alarm(false); clearInterval(titleTimer); document.title = 'מרכז הפיט'; };
+
+// ---------- פעולות ----------
+document.addEventListener('click', async (e) => {
+  Pit.unlockAudio();
+  const t = e.target.closest('[data-team],[data-i],[data-alert],[data-cancel],[data-del],[data-volt],[data-id],[data-repair],[data-rdel],[data-sort],[data-view],[data-close],[data-kick]');
+  if (!t) return;
+  const d = t.dataset;
+  if (d.team) return openTeam(Number(d.team));
+  if (d.close !== undefined) return t.closest('dialog').close();
+  if (d.view) {
+    document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b === t));
+    $('#view-board').hidden = d.view !== 'board'; $('#view-scout').hidden = d.view !== 'scout';
+    if (d.view === 'scout') renderScout();
+    return;
+  }
+  if (d.sort) { scoutSort = { key: d.sort, dir: scoutSort.key === d.sort ? -scoutSort.dir : (COLS.find((c) => c[0] === d.sort)[2] || -1) }; return renderScout(); }
+  if (d.i !== undefined) { const c = S.checklist[d.i]; c.done = !c.done; renderChecklist(); return api('/api/check', { index: Number(d.i), done: c.done }); }
+  if (d.alert) { Pit.toast('מצלצל בטלפון…'); return api('/api/alert', { id: d.alert, reason: $('#alertReason').value }).then(load); }
+  if (d.cancel) return api('/api/alert/cancel', { id: d.cancel }).then(load);
+  if (d.kick) { if (confirm('לנתק את חבר הצוות?')) await api('/api/settings', { removeMember: d.kick }); return load().then(fillSettings); }
+  if (d.del) { e.stopPropagation(); if (confirm('למחוק את הסוללה?')) return api('/api/battery', { action: 'delete', id: d.del }).then(load); return; }
+  if (d.volt) {
+    e.stopPropagation();
+    const v = prompt('מתח שנמדד (וולט):'); if (v === null) return;
+    return api('/api/battery', { action: 'voltage', id: d.volt, voltage: v }).then(load);
+  }
+  if (d.id && t.classList.contains('bcard')) { const b = S.batteries.find((x) => x.id === d.id); return api('/api/battery', { action: 'status', id: d.id, status: BNEXT[b.status] }).then(load); }
+  if (d.rdel) { e.stopPropagation(); return api('/api/repair', { action: 'delete', id: d.rdel }).then(load); }
+  if (d.repair) return api('/api/repair', { action: 'toggle', id: d.repair }).then(load);
+});
+
+$('#alertAll').onclick = () => { if (confirm('לקרוא לכל צוות המגרש?')) api('/api/alert', { id: 'all', reason: $('#alertReason').value }).then(load); };
+$('#checkReset').onclick = () => api('/api/check', { reset: true }).then(load);
+$('#addBatt').onclick = () => { const n = prompt('שם הסוללה:', `סוללה ${S.batteries.length + 1}`); if (n) api('/api/battery', { action: 'add', name: n }).then(load); };
+$('#sendForm').onsubmit = (e) => { e.preventDefault(); const text = $('#sendText').value.trim(); if (!text) return; $('#sendText').value = ''; api('/api/message', { to: $('#sendTo').value, text }).then(load); };
+$('#repairForm').onsubmit = (e) => { e.preventDefault(); const text = $('#repairText').value.trim(); if (!text) return; $('#repairText').value = ''; api('/api/repair', { action: 'add', text }).then(load); };
+$('#fullBtn').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+
+// ---------- הגדרות ----------
+function fillSettings() {
+  const s = S.settings;
+  $('#sTeam').value = s.team; $('#sSeason').value = s.season || ''; $('#sEvent').value = s.eventCode || '';
+  $('#sWarn').value = s.queueWarnAt; $('#sChecklist').value = s.checklist.join('\n'); $('#sDemo').checked = !!s.demo;
+  $('#joinCode').textContent = s.joinCode || 'ללא';
+  const addr = S.addresses[0] ? `${S.addresses[0]}/m` : `${location.origin}/m`;
+  $('#addrs').innerHTML = (S.addresses.length ? S.addresses : [location.origin]).map((a) => esc(a + '/m')).join('<br>');
+  const qrUrl = `${addr}?code=${encodeURIComponent(s.joinCode || '')}`;
+  $('#qr').innerHTML = '';
+  if (window.QRCode) new QRCode($('#qr'), { text: qrUrl, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
+  else $('#qr').innerHTML = '<small style="color:#000">אין חיבור לרשת כדי לייצר קוד סריקה. השתמשו בכתובת.</small>';
+  $('#adminLink').textContent = `${addr.replace('/m', '')}/?key=${S.adminKey}`;
+  $('#sMembers').innerHTML = S.members.map((m) => `<li><span class="dot ${m.online ? 'on' : ''}"></span><span style="flex:1">${esc(m.name)}</span><button class="ghost" data-kick="${m.id}">נתק</button></li>`).join('') || '<li class="empty">אין</li>';
+}
+$('#setBtn').onclick = () => { fillSettings(); $('#settings').showModal(); try { if (Notification.permission === 'default') Notification.requestPermission(); } catch {} };
+$('#newCode').onclick = async () => { await api('/api/settings', { newJoinCode: true }); await load(); fillSettings(); };
+$('#clearMsgs').onclick = async () => { if (confirm('למחוק את כל ההודעות?')) { await api('/api/settings', { clearMessages: true }); load(); } };
+$('#refreshNow').onclick = () => { api('/api/refresh', {}); Pit.toast('מרענן…'); };
+$('#saveSettings').onclick = async () => {
+  await api('/api/settings', {
+    team: $('#sTeam').value, season: $('#sSeason').value, eventCode: $('#sEvent').value, queueWarnAt: $('#sWarn').value,
+    checklist: $('#sChecklist').value.split('\n'), demo: $('#sDemo').checked,
+  });
+  warnedKey = null;
+  $('#settings').close(); Pit.toast('נשמר. טוען נתונים…');
+};
+
+// ---------- זמן אמת ----------
+function setConn(on) { $('#conn').innerHTML = `<span class="dot ${on ? 'on' : ''}"></span> ${on ? 'מחובר' : 'מנותק'}`; }
+Pit.stream({
+  change: load,
+  message: (d) => { if (d.to === 'pit') { Pit.beep(880, 0.12, 0.3); Pit.toast(`הודעה מ${d.from}`); } load(); },
+  ack: (d) => { Pit.beep(1200, 0.15, 0.4); Pit.toast(`${d.name} בדרך לפיט ✓`); load(); },
+  up: () => { setConn(true); load(); },
+  down: () => setConn(false),
+});
+setInterval(() => { if (S) { renderMembers(); } }, 30_000);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('#queueOk').click(); });
+load();
+</script>
+</body>
+</html>
