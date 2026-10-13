@@ -3,7 +3,6 @@
 
 הנתונים בהדגמה בדויים לגמרי: מספרי קבוצות ותוצאות נוצרים כאן באקראי עם זרע
 קבוע. אין בקובצי ההדגמה נתונים אמיתיים על קבוצות (החלטה 02, כלל ב').
-אין בהם גם את הקישור לאפליקציית הסקאוטינג: הכפתור מוצג כלא פעיל.
 
 הרצה מתיקיית המאגר:
     python3 tools/build-demos.py
@@ -58,7 +57,7 @@ base = {
     "team": TEAM, "season": 2025, "demo": False,
     "event": {"code": "DEMO", "name": "אירוע הדגמה", "start": "", "end": "", "venue": "", "city": "עיר לדוגמה", "fields": 2},
     "error": "", "updatedAt": 0, "totalMatches": 52, "playedMatches": 6,
-    "ours": ours, "next": nxt, "playingNow": False, "scoutingUrl": "",
+    "ours": ours, "next": nxt, "playingNow": False,
     "checklist": [{"text": t, "done": i < 2} for i, t in enumerate(checklist_texts)],
     "batteries": [
         {"id": "b1", "name": "סוללה 1", "status": "ready", "voltage": 13.4, "uses": 3},

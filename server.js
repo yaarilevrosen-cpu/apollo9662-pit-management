@@ -11,8 +11,6 @@ const crypto = require('crypto');
 const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
 const DATA_FILE = path.join(ROOT, 'data.json');
-// הגדרות מקומיות שלא נכנסות למאגר (מוחרג ב־.gitignore)
-const LOCAL_CONFIG_FILE = path.join(ROOT, 'config.local.json');
 const PORT = Number(process.env.PORT) || 8765;
 const API = 'https://api.ftcscout.org/rest/v1';
 const REFRESH_MS = 45_000;
@@ -52,29 +50,6 @@ const DEFAULT_STATE = () => ({
   repairs: [],     // {id, text, by, at, done, doneAt}
   demoStartedAt: 0,
 });
-
-// ---------- הגדרות מקומיות ----------
-// הקישור לאפליקציית הסקאוטינג (04) נשמר רק כאן, כי המאגר ציבורי.
-// אם הקובץ חסר או שהקישור לא תקין, הכפתור מוצג כלא פעיל.
-let localConfig = { scoutingUrl: '' };
-let localConfigMtime = -1;
-function loadLocalConfig() {
-  let mtime = 0;
-  try { mtime = fs.statSync(LOCAL_CONFIG_FILE).mtimeMs; } catch { mtime = 0; }
-  if (mtime === localConfigMtime) return;
-  localConfigMtime = mtime;
-  localConfig = { scoutingUrl: '' };
-  if (!mtime) return;
-  try {
-    const c = JSON.parse(fs.readFileSync(LOCAL_CONFIG_FILE, 'utf8'));
-    const u = new URL(String(c.scoutingUrl || ''));
-    if (u.protocol === 'https:') localConfig.scoutingUrl = u.href;
-    else console.error('config.local.json: scoutingUrl חייב להתחיל ב־https');
-  } catch (e) {
-    console.error('config.local.json לא נקרא:', e.message);
-  }
-}
-loadLocalConfig();
 
 let state;
 try {
@@ -214,8 +189,6 @@ function buildView() {
   });
 
   const next = ours.find((m) => !m.played) || null;
-  loadLocalConfig();
-
   return {
     team,
     season: cache.season,
@@ -230,7 +203,6 @@ function buildView() {
     playedMatches: Math.min(firstUnplayedIdx, sorted.length),
     ours, next,
     playingNow: !!(next && next.away === 0),
-    scoutingUrl: localConfig.scoutingUrl,
   };
 }
 

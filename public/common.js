@@ -46,17 +46,6 @@ const Pit = (() => {
   function teamsHtml(list, color, me) {
     return list.map((n) => `<span class="tn ${color} ${n === me ? 'me' : ''}">${n}</span>`).join('');
   }
-  // לשונית הסקאוטינג: רק כפתור שפותח את אפליקציית הסקאוטינג של פרויקט 04 (החלטה 01, שלב א).
-  // הקישור מגיע מהקובץ המקומי config.local.json, לא מהקוד.
-  function scoutHtml(url) {
-    const ok = /^https:\/\//.test(url || '');
-    const btn = ok
-      ? `<a class="scout-go primary" href="${esc(url)}" target="_blank" rel="noopener noreferrer">פתח את הסקאוטינג ↗</a>`
-      : '<span class="scout-go off" aria-disabled="true">הקישור לא הוגדר</span>';
-    return `${btn}
-      <p class="muted">נתוני הסקאוטינג נאספים ומעובדים באפליקציה של צוות הסקאוטינג. היא נפתחת בלשונית חדשה, וצריך להיות מחוברים עם חשבון שקיבל הרשאה.</p>
-      ${ok ? '' : '<p class="muted">כדי להפעיל: לשים את הקישור בקובץ config.local.json ליד server.js. ההסבר בקובץ ההוראות.</p>'}`;
-  }
   function awayText(n) {
     if (n === 0) return 'על המגרש עכשיו';
     if (n === 1) return 'עוד משחק אחד';
@@ -100,5 +89,5 @@ const Pit = (() => {
     clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
   }
 
-  return { api, stream, esc, time, ago, colorName, fixed, teamsHtml, awayText, scoutHtml, unlockAudio, beep, alarm, toast, setToken, get token() { return token; } };
+  return { api, stream, esc, time, ago, colorName, fixed, teamsHtml, awayText, unlockAudio, beep, alarm, toast, setToken, get token() { return token; } };
 })();

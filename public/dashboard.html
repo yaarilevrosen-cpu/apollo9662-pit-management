@@ -20,9 +20,6 @@
   .event b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .event small { color: var(--muted); }
   header .spacer { flex: 1; }
-  .tabs { display: flex; gap: 4px; background: var(--panel); padding: 4px; border-radius: 12px; border: 1px solid var(--line); }
-  .tabs button { border: 0; background: transparent; padding: 6px 14px; }
-  .tabs button.on { background: var(--panel-2); color: var(--accent); }
   main { padding: 16px 20px 40px; }
   .grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
   @media (max-width: 1200px) { .grid { grid-template-columns: 1fr 1fr; } .col-main { grid-column: 1 / -1; } }
@@ -104,10 +101,6 @@
   <div class="brand"><img src="logo.svg" alt=""> יוסטון</div>
   <div class="event"><b id="evName">טוען…</b><small id="evSub"></small></div>
   <div class="spacer"></div>
-  <div class="tabs" role="tablist">
-    <button class="on" data-view="board">לוח</button>
-    <button data-view="scout">סקאוטינג</button>
-  </div>
   <span class="pill" id="conn"><span class="dot"></span> מתחבר</span>
   <button id="fullBtn" title="מסך מלא (F11)">⛶</button>
   <button class="primary" id="setBtn">הגדרות וחיבור טלפונים</button>
@@ -166,12 +159,6 @@
     </div>
   </section>
 
-  <section id="view-scout" hidden>
-    <div class="panel">
-      <h2>סקאוטינג</h2>
-      <div class="scout-panel" id="scoutPanel"></div>
-    </div>
-  </section>
 </main>
 
 <div class="overlay queue" id="queueOverlay">
@@ -218,7 +205,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="common.js"></script>
 <script>
-const { api, esc, time, ago, colorName, fixed, teamsHtml, awayText, scoutHtml } = Pit;
+const { api, esc, time, ago, colorName, fixed, teamsHtml, awayText } = Pit;
 const $ = (s) => document.querySelector(s);
 let S = null;
 let warnedKey = null;
@@ -245,7 +232,6 @@ function render() {
     $('#evSub').textContent = S.season ? `אין לקבוצה אירועים רשומים בעונת ${S.season}` : '';
   }
   renderHero(); renderMatches(); renderChecklist(); renderBatteries(); renderMembers(); renderChat(); renderRepairs();
-  if (!$('#view-scout').hidden) renderScout();
   checkQueue();
 }
 
@@ -349,10 +335,6 @@ function renderRepairs() {
       <button class="ghost" data-rdel="${r.id}" title="מחק">✕</button></li>`).join('') || '<li class="empty">אין תיקונים פתוחים</li>';
 }
 
-// ---------- סקאוטינג: כפתור לאפליקציה של 04 ----------
-function renderScout() {
-  $('#scoutPanel').innerHTML = scoutHtml(S.scoutingUrl);
-}
 
 // ---------- התראת תור ----------
 function checkQueue() {
@@ -377,16 +359,10 @@ $('#queueOk').onclick = () => { $('#queueOverlay').classList.remove('show'); Pit
 // ---------- פעולות ----------
 document.addEventListener('click', async (e) => {
   Pit.unlockAudio();
-  const t = e.target.closest('[data-i],[data-alert],[data-cancel],[data-del],[data-volt],[data-id],[data-repair],[data-rdel],[data-view],[data-close],[data-kick]');
+  const t = e.target.closest('[data-i],[data-alert],[data-cancel],[data-del],[data-volt],[data-id],[data-repair],[data-rdel],[data-close],[data-kick]');
   if (!t) return;
   const d = t.dataset;
   if (d.close !== undefined) return t.closest('dialog').close();
-  if (d.view) {
-    document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b === t));
-    $('#view-board').hidden = d.view !== 'board'; $('#view-scout').hidden = d.view !== 'scout';
-    if (d.view === 'scout') renderScout();
-    return;
-  }
   if (d.i !== undefined) { const c = S.checklist[d.i]; c.done = !c.done; renderChecklist(); return api('/api/check', { index: Number(d.i), done: c.done }); }
   if (d.alert) { Pit.toast('מצלצל בטלפון…'); return api('/api/alert', { id: d.alert, reason: $('#alertReason').value }).then(load); }
   if (d.cancel) return api('/api/alert/cancel', { id: d.cancel }).then(load);

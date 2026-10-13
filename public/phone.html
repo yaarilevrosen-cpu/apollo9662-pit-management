@@ -20,7 +20,7 @@
   #title { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .quick { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
   .quick button { white-space: nowrap; border-radius: 99px; padding: 6px 12px; font-size: 14px; }
-  nav { position: fixed; bottom: 0; inset-inline: 0; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--panel); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
+  nav { position: fixed; bottom: 0; inset-inline: 0; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--panel); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
   nav button { border: 0; border-radius: 0; background: none; padding: 10px 4px 12px; display: grid; gap: 2px; justify-items: center; font-size: 13px; color: var(--muted); position: relative; }
   nav button span { font-size: 22px; }
   nav button.on { color: var(--accent); }
@@ -96,12 +96,6 @@
       </div>
     </section>
 
-    <section data-tab="scout" hidden>
-      <div class="panel">
-        <h2>סקאוטינג</h2>
-        <div class="scout-panel" id="scoutPanel"></div>
-      </div>
-    </section>
 
     <section data-tab="pit" hidden>
       <div class="panel" style="margin-bottom:12px">
@@ -133,7 +127,6 @@
   <nav>
     <button class="on" data-go="match"><span>🏁</span>משחק</button>
     <button data-go="chat"><span>💬</span>הודעות<i class="badge" id="badge" hidden></i></button>
-    <button data-go="scout"><span>📊</span>סקאוטינג</button>
     <button data-go="pit"><span>🔋</span>פיט</button>
     <button data-go="me"><span>⚙️</span>אני</button>
   </nav>
@@ -236,15 +229,10 @@ function render() {
       <select data-batt="${b.id}" style="width:auto">${Object.entries(BS).map(([k, v]) => `<option value="${k}" ${k === b.status ? 'selected' : ''}>${v}</option>`).join('')}</select></div>`).join('') || '<div class="empty">אין סוללות. מוסיפים אותן ממסך הפיט.</div>';
   $('#repairs').innerHTML = S.repairs.map((r) => `<li class="check ${r.done ? 'done' : ''}" data-repair="${r.id}"><span class="box"></span><span>${esc(r.text)}<br><small class="muted">${esc(r.by)} · ${time(r.at)}</small></span></li>`).join('') || '<li class="empty">אין תיקונים פתוחים</li>';
 
-  renderScout();
   if (S.me.alert?.state === 'ringing' && !ringing) ring(true, S.me.alert.reason);
   if (S.me.alert?.state !== 'ringing' && ringing) ring(false);
 }
 
-// ---------- סקאוטינג: כפתור לאפליקציה של 04 ----------
-function renderScout() {
-  $('#scoutPanel').innerHTML = Pit.scoutHtml(S.scoutingUrl);
-}
 
 // ---------- צלצול ----------
 let ringing = false, vibTimer = null, stopTimer = null;

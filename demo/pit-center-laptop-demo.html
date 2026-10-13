@@ -100,12 +100,6 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 }
 .toast.show { opacity: 1; }
 
-/* לשונית הסקאוטינג: כפתור לאפליקציה של 04 */
-.scout-panel { display: grid; gap: 12px; justify-items: start; }
-.scout-go { display: inline-block; padding: 14px 22px; border-radius: 12px; font-size: 18px; font-weight: 700; text-decoration: none; }
-.scout-go.primary { background: var(--accent); color: var(--accent-ink); }
-.scout-go.off { background: var(--panel-2); color: var(--muted); border: 1px dashed var(--line); cursor: not-allowed; }
-.scout-panel p { margin: 0; max-width: 60ch; }
 
 </style>
 <style>
@@ -120,9 +114,6 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
   .event b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .event small { color: var(--muted); }
   header .spacer { flex: 1; }
-  .tabs { display: flex; gap: 4px; background: var(--panel); padding: 4px; border-radius: 12px; border: 1px solid var(--line); }
-  .tabs button { border: 0; background: transparent; padding: 6px 14px; }
-  .tabs button.on { background: var(--panel-2); color: var(--accent); }
   main { padding: 16px 20px 40px; }
   .grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
   @media (max-width: 1200px) { .grid { grid-template-columns: 1fr 1fr; } .col-main { grid-column: 1 / -1; } }
@@ -204,10 +195,6 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
   <div class="brand"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K" alt=""> יוסטון</div>
   <div class="event"><b id="evName">טוען…</b><small id="evSub"></small></div>
   <div class="spacer"></div>
-  <div class="tabs" role="tablist">
-    <button class="on" data-view="board">לוח</button>
-    <button data-view="scout">סקאוטינג</button>
-  </div>
   <span class="pill" id="conn"><span class="dot"></span> מתחבר</span>
   <button id="fullBtn" title="מסך מלא (F11)">⛶</button>
   <button class="primary" id="setBtn">הגדרות וחיבור טלפונים</button>
@@ -266,12 +253,6 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
     </div>
   </section>
 
-  <section id="view-scout" hidden>
-    <div class="panel">
-      <h2>סקאוטינג</h2>
-      <div class="scout-panel" id="scoutPanel"></div>
-    </div>
-  </section>
 </main>
 
 <div class="overlay queue" id="queueOverlay">
@@ -365,17 +346,6 @@ const Pit = (() => {
   function teamsHtml(list, color, me) {
     return list.map((n) => `<span class="tn ${color} ${n === me ? 'me' : ''}">${n}</span>`).join('');
   }
-  // לשונית הסקאוטינג: רק כפתור שפותח את אפליקציית הסקאוטינג של פרויקט 04 (החלטה 01, שלב א).
-  // הקישור מגיע מהקובץ המקומי config.local.json, לא מהקוד.
-  function scoutHtml(url) {
-    const ok = /^https:\/\//.test(url || '');
-    const btn = ok
-      ? `<a class="scout-go primary" href="${esc(url)}" target="_blank" rel="noopener noreferrer">פתח את הסקאוטינג ↗</a>`
-      : '<span class="scout-go off" aria-disabled="true">הקישור לא הוגדר</span>';
-    return `${btn}
-      <p class="muted">נתוני הסקאוטינג נאספים ומעובדים באפליקציה של צוות הסקאוטינג. היא נפתחת בלשונית חדשה, וצריך להיות מחוברים עם חשבון שקיבל הרשאה.</p>
-      ${ok ? '' : '<p class="muted">כדי להפעיל: לשים את הקישור בקובץ config.local.json ליד server.js. ההסבר בקובץ ההוראות.</p>'}`;
-  }
   function awayText(n) {
     if (n === 0) return 'על המגרש עכשיו';
     if (n === 1) return 'עוד משחק אחד';
@@ -419,14 +389,14 @@ const Pit = (() => {
     clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
   }
 
-  return { api, stream, esc, time, ago, colorName, fixed, teamsHtml, awayText, scoutHtml, unlockAudio, beep, alarm, toast, setToken, get token() { return token; } };
+  return { api, stream, esc, time, ago, colorName, fixed, teamsHtml, awayText, unlockAudio, beep, alarm, toast, setToken, get token() { return token; } };
 })();
 
 </script>
 <script>
 // ===== מצב הדגמה למסך הפיט: אין שרת, הכול קורה בתוך הקובץ =====
 (() => {
-  const D = {"team": 9662, "season": 2025, "demo": false, "event": {"code": "DEMO", "name": "אירוע הדגמה", "start": "", "end": "", "venue": "", "city": "עיר לדוגמה", "fields": 2}, "error": "", "updatedAt": 0, "totalMatches": 52, "playedMatches": 6, "ours": [{"key": "m0", "label": "מ׳3", "level": "Quals", "color": "red", "station": 1, "partners": [90118], "opponents": [90116, 90119], "time": null, "played": true, "our": 112, "their": 126, "result": "L", "away": null}, {"key": "m1", "label": "מ׳8", "level": "Quals", "color": "blue", "station": 2, "partners": [90101], "opponents": [90119, 90102], "time": null, "played": true, "our": 148, "their": 131, "result": "W", "away": null}, {"key": "m2", "label": "מ׳12", "level": "Quals", "color": "blue", "station": 2, "partners": [90122], "opponents": [90109, 90119], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 4}, {"key": "m3", "label": "מ׳17", "level": "Quals", "color": "red", "station": 1, "partners": [90114], "opponents": [90102, 90108], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 8}, {"key": "m4", "label": "מ׳21", "level": "Quals", "color": "red", "station": 2, "partners": [90121], "opponents": [90101, 90106], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 11}, {"key": "m5", "label": "מ׳26", "level": "Quals", "color": "blue", "station": 2, "partners": [90112], "opponents": [90121, 90107], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 15}, {"key": "m6", "label": "פ׳2", "level": "DoubleElim", "color": "blue", "station": 2, "partners": [90107], "opponents": [90118, 90103], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 18}, {"key": "m7", "label": "פ׳3", "level": "DoubleElim", "color": "blue", "station": 1, "partners": [90105], "opponents": [90115, 90103], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 19}, {"key": "m8", "label": "פ׳5", "level": "DoubleElim", "color": "red", "station": 1, "partners": [90118], "opponents": [90113, 90102], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 21}], "next": {"key": "m2", "label": "מ׳12", "level": "Quals", "color": "blue", "station": 2, "partners": [90122], "opponents": [90109, 90119], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 4}, "playingNow": false, "scoutingUrl": "", "checklist": [{"text": "סוללה טעונה ומחוברת", "done": true}, {"text": "רכזת הנהג טעונה ומחוברת לרובוט", "done": true}, {"text": "שלטים מחוברים ומשויכים", "done": false}, {"text": "נבחרה תוכנית אוטונומית נכונה", "done": false}, {"text": "ברגים ומחברים נבדקו", "done": false}, {"text": "סימון הברית על הרובוט", "done": false}], "batteries": [{"id": "b1", "name": "סוללה 1", "status": "ready", "voltage": 13.4, "uses": 3}, {"id": "b2", "name": "סוללה 2", "status": "robot", "voltage": 12.9, "uses": 4}, {"id": "b3", "name": "סוללה 3", "status": "charging", "voltage": null, "uses": 1}, {"id": "b4", "name": "סוללה 4", "status": "used", "voltage": 12.1, "uses": 5}, {"id": "b5", "name": "סוללה 5", "status": "ready", "voltage": 13.6, "uses": 2}], "repairs": [{"id": "r1", "text": "להחליף גלגל שמאלי קדמי", "by": "הפיט", "at": 0, "done": false}, {"id": "r2", "text": "להדק את הברגים של הזרוע", "by": "חבר צוות", "at": 0, "done": true}], "members": [{"id": "u1", "name": "נועה", "online": true, "lastSeen": 0, "alert": {"state": "ack", "at": 0, "ackAt": 0}}, {"id": "u2", "name": "עומר", "online": true, "lastSeen": 0, "alert": {"state": "none"}}, {"id": "u3", "name": "איתי", "online": false, "lastSeen": 0, "alert": {"state": "none"}}], "messages": [{"id": "m1", "from": "pit", "to": "all", "text": "כולם לחזור לפיט אחרי המשחק, יש שינוי באוטונומי", "at": 0, "readBy": ["u1", "u2"]}, {"id": "m2", "from": "u1", "fromName": "נועה", "to": "pit", "text": "בדרך!", "at": 0, "readBy": []}, {"id": "m3", "from": "u2", "fromName": "עומר", "to": "pit", "text": "השופט ביקש לראות את הרובוט בבדיקה", "at": 0, "readBy": []}], "settings": {"team": 9662, "season": null, "eventCode": "", "joinCode": "482913", "queueWarnAt": 2, "demo": false, "checklist": ["סוללה טעונה ומחוברת", "רכזת הנהג טעונה ומחוברת לרובוט", "שלטים מחוברים ומשויכים", "נבחרה תוכנית אוטונומית נכונה", "ברגים ומחברים נבדקו", "סימון הברית על הרובוט"]}, "adminKey": "demo-key", "addresses": ["http://192.168.1.20:8765"]};
+  const D = {"team": 9662, "season": 2025, "demo": false, "event": {"code": "DEMO", "name": "אירוע הדגמה", "start": "", "end": "", "venue": "", "city": "עיר לדוגמה", "fields": 2}, "error": "", "updatedAt": 0, "totalMatches": 52, "playedMatches": 6, "ours": [{"key": "m0", "label": "מ׳3", "level": "Quals", "color": "red", "station": 1, "partners": [90118], "opponents": [90116, 90119], "time": null, "played": true, "our": 112, "their": 126, "result": "L", "away": null}, {"key": "m1", "label": "מ׳8", "level": "Quals", "color": "blue", "station": 2, "partners": [90101], "opponents": [90119, 90102], "time": null, "played": true, "our": 148, "their": 131, "result": "W", "away": null}, {"key": "m2", "label": "מ׳12", "level": "Quals", "color": "blue", "station": 2, "partners": [90122], "opponents": [90109, 90119], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 4}, {"key": "m3", "label": "מ׳17", "level": "Quals", "color": "red", "station": 1, "partners": [90114], "opponents": [90102, 90108], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 8}, {"key": "m4", "label": "מ׳21", "level": "Quals", "color": "red", "station": 2, "partners": [90121], "opponents": [90101, 90106], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 11}, {"key": "m5", "label": "מ׳26", "level": "Quals", "color": "blue", "station": 2, "partners": [90112], "opponents": [90121, 90107], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 15}, {"key": "m6", "label": "פ׳2", "level": "DoubleElim", "color": "blue", "station": 2, "partners": [90107], "opponents": [90118, 90103], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 18}, {"key": "m7", "label": "פ׳3", "level": "DoubleElim", "color": "blue", "station": 1, "partners": [90105], "opponents": [90115, 90103], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 19}, {"key": "m8", "label": "פ׳5", "level": "DoubleElim", "color": "red", "station": 1, "partners": [90118], "opponents": [90113, 90102], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 21}], "next": {"key": "m2", "label": "מ׳12", "level": "Quals", "color": "blue", "station": 2, "partners": [90122], "opponents": [90109, 90119], "time": null, "played": false, "our": null, "their": null, "result": null, "away": 4}, "playingNow": false, "checklist": [{"text": "סוללה טעונה ומחוברת", "done": true}, {"text": "רכזת הנהג טעונה ומחוברת לרובוט", "done": true}, {"text": "שלטים מחוברים ומשויכים", "done": false}, {"text": "נבחרה תוכנית אוטונומית נכונה", "done": false}, {"text": "ברגים ומחברים נבדקו", "done": false}, {"text": "סימון הברית על הרובוט", "done": false}], "batteries": [{"id": "b1", "name": "סוללה 1", "status": "ready", "voltage": 13.4, "uses": 3}, {"id": "b2", "name": "סוללה 2", "status": "robot", "voltage": 12.9, "uses": 4}, {"id": "b3", "name": "סוללה 3", "status": "charging", "voltage": null, "uses": 1}, {"id": "b4", "name": "סוללה 4", "status": "used", "voltage": 12.1, "uses": 5}, {"id": "b5", "name": "סוללה 5", "status": "ready", "voltage": 13.6, "uses": 2}], "repairs": [{"id": "r1", "text": "להחליף גלגל שמאלי קדמי", "by": "הפיט", "at": 0, "done": false}, {"id": "r2", "text": "להדק את הברגים של הזרוע", "by": "חבר צוות", "at": 0, "done": true}], "members": [{"id": "u1", "name": "נועה", "online": true, "lastSeen": 0, "alert": {"state": "ack", "at": 0, "ackAt": 0}}, {"id": "u2", "name": "עומר", "online": true, "lastSeen": 0, "alert": {"state": "none"}}, {"id": "u3", "name": "איתי", "online": false, "lastSeen": 0, "alert": {"state": "none"}}], "messages": [{"id": "m1", "from": "pit", "to": "all", "text": "כולם לחזור לפיט אחרי המשחק, יש שינוי באוטונומי", "at": 0, "readBy": ["u1", "u2"]}, {"id": "m2", "from": "u1", "fromName": "נועה", "to": "pit", "text": "בדרך!", "at": 0, "readBy": []}, {"id": "m3", "from": "u2", "fromName": "עומר", "to": "pit", "text": "השופט ביקש לראות את הרובוט בבדיקה", "at": 0, "readBy": []}], "settings": {"team": 9662, "season": null, "eventCode": "", "joinCode": "482913", "queueWarnAt": 2, "demo": false, "checklist": ["סוללה טעונה ומחוברת", "רכזת הנהג טעונה ומחוברת לרובוט", "שלטים מחוברים ומשויכים", "נבחרה תוכנית אוטונומית נכונה", "ברגים ומחברים נבדקו", "סימון הברית על הרובוט"]}, "adminKey": "demo-key", "addresses": ["http://192.168.1.20:8765"]};
   const now = Date.now();
   D.messages.forEach((m, i) => (m.at = now - (D.messages.length - i) * 3 * 60000));
   D.repairs.forEach((r, i) => (r.at = now - (i + 1) * 11 * 60000));
@@ -587,7 +557,7 @@ const Pit = (() => {
 
 </script>
 <script>
-const { api, esc, time, ago, colorName, fixed, teamsHtml, awayText, scoutHtml } = Pit;
+const { api, esc, time, ago, colorName, fixed, teamsHtml, awayText } = Pit;
 const $ = (s) => document.querySelector(s);
 let S = null;
 let warnedKey = null;
@@ -614,7 +584,6 @@ function render() {
     $('#evSub').textContent = S.season ? `אין לקבוצה אירועים רשומים בעונת ${S.season}` : '';
   }
   renderHero(); renderMatches(); renderChecklist(); renderBatteries(); renderMembers(); renderChat(); renderRepairs();
-  if (!$('#view-scout').hidden) renderScout();
   checkQueue();
 }
 
@@ -718,10 +687,6 @@ function renderRepairs() {
       <button class="ghost" data-rdel="${r.id}" title="מחק">✕</button></li>`).join('') || '<li class="empty">אין תיקונים פתוחים</li>';
 }
 
-// ---------- סקאוטינג: כפתור לאפליקציה של 04 ----------
-function renderScout() {
-  $('#scoutPanel').innerHTML = scoutHtml(S.scoutingUrl);
-}
 
 // ---------- התראת תור ----------
 function checkQueue() {
@@ -746,16 +711,10 @@ $('#queueOk').onclick = () => { $('#queueOverlay').classList.remove('show'); Pit
 // ---------- פעולות ----------
 document.addEventListener('click', async (e) => {
   Pit.unlockAudio();
-  const t = e.target.closest('[data-i],[data-alert],[data-cancel],[data-del],[data-volt],[data-id],[data-repair],[data-rdel],[data-view],[data-close],[data-kick]');
+  const t = e.target.closest('[data-i],[data-alert],[data-cancel],[data-del],[data-volt],[data-id],[data-repair],[data-rdel],[data-close],[data-kick]');
   if (!t) return;
   const d = t.dataset;
   if (d.close !== undefined) return t.closest('dialog').close();
-  if (d.view) {
-    document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b === t));
-    $('#view-board').hidden = d.view !== 'board'; $('#view-scout').hidden = d.view !== 'scout';
-    if (d.view === 'scout') renderScout();
-    return;
-  }
   if (d.i !== undefined) { const c = S.checklist[d.i]; c.done = !c.done; renderChecklist(); return api('/api/check', { index: Number(d.i), done: c.done }); }
   if (d.alert) { Pit.toast('מצלצל בטלפון…'); return api('/api/alert', { id: d.alert, reason: $('#alertReason').value }).then(load); }
   if (d.cancel) return api('/api/alert/cancel', { id: d.cancel }).then(load);
