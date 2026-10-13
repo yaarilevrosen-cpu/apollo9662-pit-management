@@ -1,4 +1,4 @@
-// מרכז הפיט — Apollo #9662
+// יוסטון — אפליקציית ניהול הפיט של Apollo #9662
 // שרת יחיד בלי תלויות. הפעלה: node server.js
 'use strict';
 
@@ -558,7 +558,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   const addrs = lanAddresses();
-  console.log('\n  מרכז הפיט פועל');
+  console.log('\n  יוסטון פועל');
   console.log(`  מסך הפיט:      http://localhost:${PORT}`);
   for (const ip of addrs) console.log(`  לטלפונים:      http://${ip}:${PORT}/m`);
   console.log(`  קוד הצטרפות:   ${state.settings.joinCode || '(ללא)'}`);

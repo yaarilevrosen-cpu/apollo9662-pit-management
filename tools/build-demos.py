@@ -107,7 +107,7 @@ def bundle(src, mock_file, state, out, extra=lambda h: h):
     html = html.replace('<script src="common.js"></script>', "<script>\n" + common + "\n</script>\n<script>\n" + mock + "\n</script>")
     html = html.replace('<link rel="manifest" href="manifest.webmanifest">\n', "")
     html = html.replace('src="logo.svg"', f'src="{logo}"').replace('href="logo.svg"', f'href="{logo}"').replace("icon: 'logo.svg'", f"icon: '{logo}'")
-    html = html.replace("<title>מרכז הפיט</title>", "<title>מרכז הפיט · הדגמה</title>")
+    html = html.replace("<title>יוסטון</title>", "<title>יוסטון · הדגמה</title>")
     html = extra(html)
     assert "logo.svg" not in html and "__DEMO_STATE__" not in html
     (OUT / out).write_text(html)

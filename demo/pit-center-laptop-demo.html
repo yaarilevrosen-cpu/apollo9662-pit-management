@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>מרכז הפיט · הדגמה</title>
+<title>יוסטון · הדגמה</title>
 <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -201,7 +201,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 </head>
 <body>
 <header>
-  <div class="brand"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K" alt=""> מרכז הפיט</div>
+  <div class="brand"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K" alt=""> יוסטון</div>
   <div class="event"><b id="evName">טוען…</b><small id="evSub"></small></div>
   <div class="spacer"></div>
   <div class="tabs" role="tablist">
@@ -734,14 +734,14 @@ function checkQueue() {
   Pit.alarm(true, 'chime');
   setTimeout(() => Pit.alarm(false), 8000);
   flashTitle();
-  try { if (Notification.permission === 'granted') new Notification('מרכז הפיט', { body: $('#queueTitle').textContent, requireInteraction: true }); } catch {}
+  try { if (Notification.permission === 'granted') new Notification('יוסטון', { body: $('#queueTitle').textContent, requireInteraction: true }); } catch {}
 }
 let titleTimer;
 function flashTitle() {
   clearInterval(titleTimer); let i = 0;
-  titleTimer = setInterval(() => { document.title = i++ % 2 ? '⚠ לתור!' : 'מרכז הפיט'; if (i > 40) { clearInterval(titleTimer); document.title = 'מרכז הפיט'; } }, 800);
+  titleTimer = setInterval(() => { document.title = i++ % 2 ? '⚠ לתור!' : 'יוסטון'; if (i > 40) { clearInterval(titleTimer); document.title = 'יוסטון'; } }, 800);
 }
-$('#queueOk').onclick = () => { $('#queueOverlay').classList.remove('show'); Pit.alarm(false); clearInterval(titleTimer); document.title = 'מרכז הפיט'; };
+$('#queueOk').onclick = () => { $('#queueOverlay').classList.remove('show'); Pit.alarm(false); clearInterval(titleTimer); document.title = 'יוסטון'; };
 
 // ---------- פעולות ----------
 document.addEventListener('click', async (e) => {

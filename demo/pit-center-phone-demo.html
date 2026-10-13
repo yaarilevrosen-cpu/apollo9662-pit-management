@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0b0e14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K">
-<title>מרכז הפיט · הדגמה</title>
+<title>יוסטון · הדגמה</title>
 <style>
 :root {
   --bg: #0b0e14;
@@ -148,6 +148,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
   .err { color: var(--red); min-height: 1.4em; text-align: center; }
   .settings li { justify-content: space-between; }
   .overlay.alarm small { opacity: .8; font-size: 16px; }
+  .overlay.alarm .go { font-weight: 800; opacity: 1; }
   .tip { font-size: 14px; background: var(--panel-2); border-radius: 12px; padding: 10px 12px; border: 1px solid var(--line); }
   [hidden] { display: none !important; }
 </style>
@@ -157,7 +158,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 <section class="join" id="joinView" hidden>
   <form id="joinForm">
     <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K" alt="">
-    <h1>מרכז הפיט</h1>
+    <h1>יוסטון</h1>
     <p class="muted" style="text-align:center;margin:0">התחברו כדי לקבל קריאות והודעות מהפיט</p>
     <label>השם שלך<input id="jName" autocomplete="name" required maxlength="30"></label>
     <label>קוד הצטרפות<input id="jCode" inputmode="numeric" autocomplete="one-time-code" dir="ltr"></label>
@@ -167,7 +168,7 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 </section>
 
 <div id="appView" hidden>
-  <div class="top"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K" alt=""><b id="title">מרכז הפיט</b><span class="pill" id="conn"><span class="dot"></span></span></div>
+  <div class="top"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K" alt=""><b id="title">יוסטון</b><span class="pill" id="conn"><span class="dot"></span></span></div>
   <div class="wrap">
     <section data-tab="match">
       <div id="nextCard" class="card"></div>
@@ -238,7 +239,8 @@ input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 
 </div>
 
 <div class="overlay alarm" id="alarm">
-  <h1>בוא לפיט עכשיו!</h1>
+  <h1>יוסטון, יש לנו בעיה</h1>
+  <p class="go">בוא לפיט עכשיו!</p>
   <p id="alarmReason"></p>
   <button id="ackBtn">קיבלתי, בדרך!</button>
   <small>הצלצול ייעצר לבד אחרי שתי דקות</small>
@@ -581,7 +583,7 @@ function ring(on, reason) {
   const vib = () => navigator.vibrate?.([700, 300, 700, 300, 700]);
   vib(); vibTimer = setInterval(vib, 3000);
   stopTimer = setTimeout(() => { Pit.alarm(false); clearInterval(vibTimer); }, 120_000);
-  notify('בוא לפיט עכשיו!', true);
+  notify('יש לנו בעיה. בוא לפיט עכשיו!', true);
 }
 $('#ackBtn').onclick = async () => { ring(false); try { await api('/api/ack', {}); } catch {} load(); };
 
@@ -591,7 +593,7 @@ if (false) navigator.serviceWorker.register('sw.js').then((r) => (swReg = r)).ca
 function notify(body, urgent) {
   if (!('Notification' in window) || Notification.permission !== 'granted' || document.visibilityState === 'visible') return;
   const opts = { body, tag: urgent ? 'pit-alert' : 'pit-msg', renotify: true, requireInteraction: !!urgent, vibrate: [700, 300, 700, 300, 700], icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTYiIGZpbGw9IiMxMzE4MjQiLz4KICA8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzNCIgcng9IjI1IiByeT0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2Q4YmZmIiBzdHJva2Utd2lkdGg9IjMiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAzMiAzNCkiLz4KICA8cGF0aCBkPSJNMzIgMTIgTDQ2IDUwIEgzOS41IEwzNi42IDQxLjUgSDI3LjQgTDI0LjUgNTAgSDE4IFogTTI5LjMgMzYgSDM0LjcgTDMyIDI3LjYgWiIgZmlsbD0iI2ZmYjAyMCIvPgogIDxjaXJjbGUgY3g9IjU0IiBjeT0iMjUiIHI9IjMuNSIgZmlsbD0iI2ZmNGQ1ZSIvPgo8L3N2Zz4K' };
-  try { swReg ? swReg.showNotification('מרכז הפיט', opts) : new Notification('מרכז הפיט', opts); } catch {}
+  try { swReg ? swReg.showNotification('יוסטון', opts) : new Notification('יוסטון', opts); } catch {}
 }
 function updateMeTab() {
   const n = 'Notification' in window ? Notification.permission : 'none';

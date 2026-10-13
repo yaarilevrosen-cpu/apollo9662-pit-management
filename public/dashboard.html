@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>מרכז הפיט</title>
+<title>יוסטון</title>
 <link rel="icon" href="logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -101,7 +101,7 @@
 </head>
 <body>
 <header>
-  <div class="brand"><img src="logo.svg" alt=""> מרכז הפיט</div>
+  <div class="brand"><img src="logo.svg" alt=""> יוסטון</div>
   <div class="event"><b id="evName">טוען…</b><small id="evSub"></small></div>
   <div class="spacer"></div>
   <div class="tabs" role="tablist">
@@ -365,14 +365,14 @@ function checkQueue() {
   Pit.alarm(true, 'chime');
   setTimeout(() => Pit.alarm(false), 8000);
   flashTitle();
-  try { if (Notification.permission === 'granted') new Notification('מרכז הפיט', { body: $('#queueTitle').textContent, requireInteraction: true }); } catch {}
+  try { if (Notification.permission === 'granted') new Notification('יוסטון', { body: $('#queueTitle').textContent, requireInteraction: true }); } catch {}
 }
 let titleTimer;
 function flashTitle() {
   clearInterval(titleTimer); let i = 0;
-  titleTimer = setInterval(() => { document.title = i++ % 2 ? '⚠ לתור!' : 'מרכז הפיט'; if (i > 40) { clearInterval(titleTimer); document.title = 'מרכז הפיט'; } }, 800);
+  titleTimer = setInterval(() => { document.title = i++ % 2 ? '⚠ לתור!' : 'יוסטון'; if (i > 40) { clearInterval(titleTimer); document.title = 'יוסטון'; } }, 800);
 }
-$('#queueOk').onclick = () => { $('#queueOverlay').classList.remove('show'); Pit.alarm(false); clearInterval(titleTimer); document.title = 'מרכז הפיט'; };
+$('#queueOk').onclick = () => { $('#queueOverlay').classList.remove('show'); Pit.alarm(false); clearInterval(titleTimer); document.title = 'יוסטון'; };
 
 // ---------- פעולות ----------
 document.addEventListener('click', async (e) => {

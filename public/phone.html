@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="logo.svg">
-<title>מרכז הפיט</title>
+<title>יוסטון</title>
 <link rel="stylesheet" href="common.css">
 <style>
   body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
@@ -49,6 +49,7 @@
   .err { color: var(--red); min-height: 1.4em; text-align: center; }
   .settings li { justify-content: space-between; }
   .overlay.alarm small { opacity: .8; font-size: 16px; }
+  .overlay.alarm .go { font-weight: 800; opacity: 1; }
   .tip { font-size: 14px; background: var(--panel-2); border-radius: 12px; padding: 10px 12px; border: 1px solid var(--line); }
   [hidden] { display: none !important; }
 </style>
@@ -58,7 +59,7 @@
 <section class="join" id="joinView" hidden>
   <form id="joinForm">
     <img src="logo.svg" alt="">
-    <h1>מרכז הפיט</h1>
+    <h1>יוסטון</h1>
     <p class="muted" style="text-align:center;margin:0">התחברו כדי לקבל קריאות והודעות מהפיט</p>
     <label>השם שלך<input id="jName" autocomplete="name" required maxlength="30"></label>
     <label>קוד הצטרפות<input id="jCode" inputmode="numeric" autocomplete="one-time-code" dir="ltr"></label>
@@ -68,7 +69,7 @@
 </section>
 
 <div id="appView" hidden>
-  <div class="top"><img src="logo.svg" alt=""><b id="title">מרכז הפיט</b><span class="pill" id="conn"><span class="dot"></span></span></div>
+  <div class="top"><img src="logo.svg" alt=""><b id="title">יוסטון</b><span class="pill" id="conn"><span class="dot"></span></span></div>
   <div class="wrap">
     <section data-tab="match">
       <div id="nextCard" class="card"></div>
@@ -139,7 +140,8 @@
 </div>
 
 <div class="overlay alarm" id="alarm">
-  <h1>בוא לפיט עכשיו!</h1>
+  <h1>יוסטון, יש לנו בעיה</h1>
+  <p class="go">בוא לפיט עכשיו!</p>
   <p id="alarmReason"></p>
   <button id="ackBtn">קיבלתי, בדרך!</button>
   <small>הצלצול ייעצר לבד אחרי שתי דקות</small>
@@ -256,7 +258,7 @@ function ring(on, reason) {
   const vib = () => navigator.vibrate?.([700, 300, 700, 300, 700]);
   vib(); vibTimer = setInterval(vib, 3000);
   stopTimer = setTimeout(() => { Pit.alarm(false); clearInterval(vibTimer); }, 120_000);
-  notify('בוא לפיט עכשיו!', true);
+  notify('יש לנו בעיה. בוא לפיט עכשיו!', true);
 }
 $('#ackBtn').onclick = async () => { ring(false); try { await api('/api/ack', {}); } catch {} load(); };
 
@@ -266,7 +268,7 @@ if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWor
 function notify(body, urgent) {
   if (!('Notification' in window) || Notification.permission !== 'granted' || document.visibilityState === 'visible') return;
   const opts = { body, tag: urgent ? 'pit-alert' : 'pit-msg', renotify: true, requireInteraction: !!urgent, vibrate: [700, 300, 700, 300, 700], icon: 'logo.svg' };
-  try { swReg ? swReg.showNotification('מרכז הפיט', opts) : new Notification('מרכז הפיט', opts); } catch {}
+  try { swReg ? swReg.showNotification('יוסטון', opts) : new Notification('יוסטון', opts); } catch {}
 }
 function updateMeTab() {
   const n = 'Notification' in window ? Notification.permission : 'none';
