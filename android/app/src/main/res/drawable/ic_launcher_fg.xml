@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- סמל: האות A כמו טיל, עם מסלול כתום -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#00000000" android:strokeColor="#FFB020" android:strokeWidth="4"
+        android:pathData="M24,62 C24,50 84,40 84,50 C84,60 24,72 24,62 Z" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M54,26 L74,78 L64,78 L60,67 L48,67 L44,78 L34,78 Z M51,59 L57,59 L54,50 Z" />
+</vector>

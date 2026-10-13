@@ -114,10 +114,11 @@
         <h2>הטלפון שלי</h2>
         <ul class="list">
           <li><span>מחובר בתור</span><b id="meName"></b></li>
-          <li><span>התראות</span><button id="notifBtn">אפשר</button></li>
-          <li><span>להשאיר את המסך דלוק</span><button id="wakeBtn">הפעל</button></li>
+          <li class="web-only"><span>התראות</span><button id="notifBtn">אפשר</button></li>
+          <li class="web-only"><span>להשאיר את המסך דלוק</span><button id="wakeBtn">הפעל</button></li>
           <li><span>בדיקת צלצול</span><button id="testBtn">צלצל</button></li>
         </ul>
+        <ul class="list" id="nativeList" hidden></ul>
         <div class="tip" id="tip"></div>
         <button class="ghost" id="logout">התנתקות</button>
       </div>
@@ -143,6 +144,8 @@
 <script src="common.js"></script>
 <script>
 const { api, esc, time, colorName, teamsHtml, awayText } = Pit;
+// באפליקציית האנדרואיד: האפליקציה מצלצלת בעצמה, גם במצב שקט ומעל מסך נעול
+const NATIVE = window.HoustonAndroid || null;
 const $ = (s) => document.querySelector(s);
 let S = null, es = null, tab = 'match', wake = null;
 const params = new URLSearchParams(location.search);
@@ -150,7 +153,7 @@ if (params.get('code')) $('#jCode').value = params.get('code');
 try { $('#jName').value = localStorage.getItem('pit-name') || ''; } catch {}
 
 // ---------- התחברות ----------
-function showJoin(msg) { $('#joinView').hidden = false; $('#appView').hidden = true; $('#jErr').textContent = msg || ''; es?.close(); }
+function showJoin(msg) { NATIVE?.clearSession(); $('#joinView').hidden = false; $('#appView').hidden = true; $('#jErr').textContent = msg || ''; es?.close(); }
 $('#joinForm').onsubmit = async (e) => {
   e.preventDefault();
   Pit.unlockAudio();
@@ -158,6 +161,7 @@ $('#joinForm').onsubmit = async (e) => {
     const name = $('#jName').value.trim();
     const r = await api('/api/join', { name, code: $('#jCode').value });
     Pit.setToken(r.token);
+    NATIVE?.setSession(r.token);
     try { localStorage.setItem('pit-name', name); } catch {}
     history.replaceState(null, '', location.pathname);
     start();
@@ -165,6 +169,7 @@ $('#joinForm').onsubmit = async (e) => {
 };
 
 async function start() {
+  NATIVE?.setSession(Pit.token);
   $('#joinView').hidden = true; $('#appView').hidden = false;
   await load();
   es?.close();
@@ -237,6 +242,7 @@ function render() {
 // ---------- צלצול ----------
 let ringing = false, vibTimer = null, stopTimer = null;
 function ring(on, reason) {
+  if (NATIVE) return; // באפליקציה הצלצול והמסך האדום הם של האפליקציה
   ringing = on;
   $('#alarm').classList.toggle('show', on);
   clearInterval(vibTimer); clearTimeout(stopTimer);
@@ -264,12 +270,36 @@ function updateMeTab() {
   $('#notifBtn').disabled = n !== 'default';
   $('#wakeBtn').textContent = wake ? 'פעיל ✓' : 'הפעל';
   $('#wakeBtn').disabled = !('wakeLock' in navigator);
+  document.querySelectorAll('.web-only').forEach((el) => (el.hidden = !!NATIVE));
+  if (NATIVE) return updateNative();
   const tips = [];
   if (!window.isSecureContext) tips.push('החיבור לא מאובטח, לכן התראות מערכת ונעילת מסך דלוק לא זמינות. כדי שהצלצול יגיע, השאירו את הדף פתוח בחזית.');
   if (/iPhone|iPad/.test(navigator.userAgent)) tips.push('באייפון אין רטט מהדפדפן. הוסיפו את הדף למסך הבית לחוויה טובה יותר.');
   tips.push('כדי לא לפספס קריאה: השאירו את הדף פתוח והפעילו "להשאיר את המסך דלוק".');
   $('#tip').innerHTML = tips.map(esc).join('<br><br>');
 }
+function updateNative() {
+  let st = {};
+  try { st = JSON.parse(NATIVE.status()); } catch {}
+  const rows = [
+    ['notifications', 'התראות'],
+    ['fullScreen', 'מסך אדום מעל מסך נעול'],
+    ['battery', 'בלי חיסכון סוללה ליוסטון'],
+  ];
+  $('#nativeList').hidden = false;
+  $('#nativeList').innerHTML = rows.map(([k, t]) => `<li><span>${t}</span>${st[k] ? '<b>✓</b>' : `<button data-fix="${k}">לתקן</button>`}</li>`).join('')
+    + `<li><span>חיבור ברקע</span><b>${st.connected ? 'מחובר ✓' : 'מתחבר…'}</b></li>`
+    + '<li><span>כתובת המחשב בפיט</span><button data-server>להחליף</button></li>';
+  const missing = rows.filter(([k]) => !st[k]).length;
+  $('#tip').innerHTML = esc(missing
+    ? 'כדי שהקריאה תגיע בכל מצב, צריך לאשר את מה שמסומן "לתקן". אחר כך לחזור לכאן.'
+    : 'הכול מוכן. קריאה מהפיט תצלצל גם במצב שקט, גם כשהמסך כבוי וגם כשהאפליקציה סגורה.');
+}
+$('#nativeList').onclick = (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.fix) NATIVE.fix(b.dataset.fix);
+  if (b.dataset.server !== undefined) NATIVE.changeServer();
+};
 $('#notifBtn').onclick = async () => { await Notification.requestPermission(); updateMeTab(); };
 $('#wakeBtn').onclick = async () => {
   $('#wakeBtn').dataset.want = '1';
@@ -277,9 +307,11 @@ $('#wakeBtn').onclick = async () => {
   updateMeTab();
 };
 document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState === 'visible') { load(); if (wake === null && $('#wakeBtn').dataset.want) $('#wakeBtn').click(); }
+  if (document.visibilityState === 'visible') { if (tab === 'me') updateMeTab(); load(); if (wake === null && $('#wakeBtn').dataset.want) $('#wakeBtn').click(); }
 });
-$('#testBtn').onclick = () => { Pit.unlockAudio(); ring(true, 'בדיקת צלצול'); setTimeout(() => ring(false), 3000); };
+$('#testBtn').onclick = () => {
+  if (NATIVE) return NATIVE.testAlarm();
+  Pit.unlockAudio(); ring(true, 'בדיקת צלצול'); setTimeout(() => ring(false), 3000); };
 $('#logout').onclick = () => { Pit.setToken(null); showJoin(); };
 
 // ---------- פעולות ----------

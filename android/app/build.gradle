@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application'
+}
+
+// חתימה: הפרטים בקובץ keystore.properties שמוחרג מהמאגר.
+// בלי הקובץ נבנית גרסת ניסוי בלבד.
+def keyProps = new Properties()
+def keyFile = rootProject.file('keystore.properties')
+if (keyFile.exists()) keyFile.withInputStream { keyProps.load(it) }
+
+android {
+    namespace 'org.apollo9662.houston'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'org.apollo9662.houston'
+        minSdk 27
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+
+    signingConfigs {
+        release {
+            if (keyFile.exists()) {
+                storeFile file(keyProps['storeFile'])
+                storePassword keyProps['storePassword']
+                keyAlias keyProps['keyAlias']
+                keyPassword keyProps['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (keyFile.exists()) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

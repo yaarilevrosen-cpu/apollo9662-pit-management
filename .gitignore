@@ -10,3 +10,13 @@ config.local.*
 node_modules/
 .DS_Store
 Thumbs.db
+
+# אפליקציית האנדרואיד: תוצרי בנייה ומפתח החתימה (סודי, לא במאגר)
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/keystore.properties
+*.jks
+*.keystore
+*.apk

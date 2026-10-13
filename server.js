@@ -390,7 +390,7 @@ const routes = {
     } else return send(res, 403, {});
     state.messages.push(msg);
     if (state.messages.length > 500) state.messages.splice(0, state.messages.length - 500);
-    broadcast('message', { from: msg.from === 'pit' ? 'הפיט' : msg.fromName, to: msg.to }, (c) =>
+    broadcast('message', { from: msg.from === 'pit' ? 'הפיט' : msg.fromName, to: msg.to, text: msg.text }, (c) =>
       msg.to === 'all' || c.memberId === msg.to || (msg.to === 'pit' && c.kind === 'admin'));
     changed();
     send(res, 200, { ok: true });
