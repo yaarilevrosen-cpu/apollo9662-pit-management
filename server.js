@@ -1,5 +1,6 @@
 // יוסטון — אפליקציית ניהול הפיט של Apollo #9662
 // שרת יחיד בלי תלויות. הפעלה: node server.js
+// הלוגיקה עצמה ב־lib/core.js. כאן רק רשת, קבצים ולוח המשחקים מהאתר.
 'use strict';
 
 const http = require('http');
@@ -7,75 +8,58 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
+const { createCore } = require('./lib/core');
 
 const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
-const DATA_FILE = path.join(ROOT, 'data.json');
+const DATA_FILE = process.env.HOUSTON_DATA || path.join(ROOT, 'data.json');
 const PORT = Number(process.env.PORT) || 8765;
 const API = 'https://api.ftcscout.org/rest/v1';
 const REFRESH_MS = 45_000;
-const DEMO_STEP_MS = 75_000; // במצב הדגמה: משחק חדש "משוחק" כל 75 שניות
 
 // ---------- אחסון ----------
 const rid = (n = 8) => crypto.randomBytes(n).toString('hex');
 const code6 = () => String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
 
+let saved = null;
+try { saved = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch (e) {
+  // קובץ פגום לא נמחק: שומרים עותק לפני שמתחילים מחדש
+  if (e.code !== 'ENOENT') { try { fs.copyFileSync(DATA_FILE, `${DATA_FILE}.broken-${Date.now()}`); } catch {} }
+}
+
+let saveTimer = null;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    fs.writeFile(DATA_FILE + '.tmp', JSON.stringify(core.state, null, 2), (e) => {
+      if (!e) fs.rename(DATA_FILE + '.tmp', DATA_FILE, () => {});
+    });
+  }, 300);
+}
+
+function lanAddresses() {
+  const out = [];
+  for (const list of Object.values(os.networkInterfaces())) {
+    for (const i of list || []) if (i.family === 'IPv4' && !i.internal) out.push(i.address);
+  }
+  return out;
+}
+
+const core = createCore({
+  state: saved, rid, code6, save,
+  addresses: () => lanAddresses().map((ip) => `http://${ip}:${PORT}`),
+});
+const state = core.state;
+save();
+
+// ---------- לוח המשחקים מהאתר ----------
 function defaultSeason(d = new Date()) {
   // עונת FTC מתחילה בספטמבר
   return d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1;
 }
 
-const DEFAULT_STATE = () => ({
-  settings: {
-    team: 9662,
-    season: null,          // null = אוטומטי
-    eventCode: '',         // ריק = אוטומטי
-    joinCode: code6(),
-    adminKey: rid(12),
-    queueWarnAt: 2,
-    demo: false,
-    checklist: [
-      'סוללה טעונה ומחוברת',
-      'רכזת הנהג טעונה ומחוברת לרובוט',
-      'שלטים מחוברים ומשויכים',
-      'נבחרה תוכנית אוטונומית נכונה',
-      'ברגים ומחברים נבדקו',
-      'סימון הברית על הרובוט',
-    ],
-  },
-  members: {},     // id -> {id, name, token, joinedAt, lastSeen, alert:{state, at, ackAt}}
-  messages: [],    // {id, from, to, text, at, readBy:[]}
-  checklistDone: { matchKey: '', done: [] },
-  batteries: [],   // {id, name, status, voltage, uses, updatedAt}
-  repairs: [],     // {id, text, by, at, done, doneAt}
-  demoStartedAt: 0,
-});
-
-let state;
-try {
-  state = Object.assign(DEFAULT_STATE(), JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')));
-  state.settings = Object.assign(DEFAULT_STATE().settings, state.settings);
-} catch {
-  state = DEFAULT_STATE();
-}
-let saveTimer = null;
-function save() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    fs.writeFile(DATA_FILE + '.tmp', JSON.stringify(state, null, 2), (e) => {
-      if (!e) fs.rename(DATA_FILE + '.tmp', DATA_FILE, () => {});
-    });
-  }, 300);
-}
-save();
-
-// ---------- נתוני תחרות ----------
-const cache = {
-  event: null, matches: [], error: '', updatedAt: 0, season: null,
-};
-
 async function getJSON(url) {
-  const r = await fetch(url, { headers: { accept: 'application/json' } });
+  const r = await fetch(url, { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(15_000) });
   if (!r.ok) throw new Error(`${r.status} ${url}`);
   return r.json();
 }
@@ -101,137 +85,31 @@ async function pickEvent(team, season) {
   return ok.sort((a, b) => b.end.localeCompare(a.end))[0] || null;
 }
 
+let refreshing = false, again = false;
 async function refresh() {
+  // אם כבר מושכים, מושכים שוב בסוף עם ההגדרות החדשות
+  if (refreshing) { again = true; return; }
+  refreshing = true;
   const s = state.settings;
   const season = seasonInUse();
   try {
     let event;
-    if (s.demo) {
-      event = await getJSON(`${API}/events/2025/ILCMPMSDA`);
-    } else if (s.eventCode) {
-      event = await getJSON(`${API}/events/${season}/${s.eventCode.toUpperCase()}`);
-    } else {
-      event = await pickEvent(s.team, season);
-    }
-    cache.event = event;
-    cache.season = season;
-    if (event) {
-      cache.matches = await getJSON(`${API}/events/${season}/${event.code}/matches`);
-    } else {
-      cache.matches = [];
-    }
-    cache.error = '';
-    cache.updatedAt = Date.now();
+    if (s.demo) event = await getJSON(`${API}/events/2025/ILCMPMSDA`);
+    else if (s.eventCode) event = await getJSON(`${API}/events/${season}/${s.eventCode.toUpperCase()}`);
+    else event = await pickEvent(s.team, season);
+    const matches = event ? await getJSON(`${API}/events/${season}/${event.code}/matches`) : [];
+    core.setSchedule({ event, matches, season, error: '', updatedAt: Date.now() });
   } catch (e) {
-    cache.error = 'אין חיבור לנתוני התחרות כרגע. מנסה שוב בקרוב.';
+    // שומרים את הלוח האחרון שהצלחנו להביא, ומודיעים שהוא לא מתעדכן
+    core.setSchedule({ error: 'אין חיבור ללוח המשחקים כרגע. מוצג הלוח האחרון שהתקבל, ומנסים שוב בקרוב.' });
     console.error('refresh failed:', e.message);
+  } finally {
+    refreshing = false;
+    if (again) { again = false; refresh(); }
   }
-  broadcast('change');
 }
 
-// ---------- עיבוד משחקים ----------
-function matchLabel(m) {
-  // מ׳ = מוקדמות, פ׳ = פלייאוף, ג׳ = גמר
-  if (m.tournamentLevel === 'Quals') return `מ׳${m.id}`;
-  if (m.tournamentLevel === 'DoubleElim' || m.tournamentLevel === 'Playoffs') return `פ׳${m.series || m.id}`;
-  if (m.tournamentLevel === 'Finals') return `ג׳${m.series || m.id}`;
-  return String(m.id);
-}
-const STATION = { One: 1, Two: 2, Three: 3 };
-
-function demoCut(sorted) {
-  // כמה משחקים כבר "שוחקו" במצב הדגמה
-  // מתחילים באמצע האירוע: שני משחקים שלנו כבר שוחקו, והשלישי עוד ארבעה משחקים
-  const oursIdx = sorted.map((m, i) => (m.teams?.some((t) => t.teamNumber === state.settings.team) ? i : -1)).filter((i) => i >= 0);
-  const third = oursIdx[2] ?? oursIdx[oursIdx.length - 1] ?? 4;
-  const base = Math.max(0, third - 4);
-  const step = Math.floor((Date.now() - (state.demoStartedAt || Date.now())) / DEMO_STEP_MS);
-  return Math.min(sorted.length, base + step);
-}
-
-function buildView() {
-  const team = Number(state.settings.team);
-  const sorted = [...cache.matches].sort((a, b) => {
-    const ta = a.scheduledStartTime || '', tb = b.scheduledStartTime || '';
-    return ta === tb ? a.id - b.id : ta.localeCompare(tb);
-  });
-  const cut = state.settings.demo ? demoCut(sorted) : Infinity;
-  const played = (m, i) => (state.settings.demo ? i < cut : m.hasBeenPlayed);
-
-  const ours = [];
-  let firstUnplayedIdx = sorted.findIndex((m, i) => !played(m, i));
-  if (firstUnplayedIdx === -1) firstUnplayedIdx = sorted.length;
-
-  sorted.forEach((m, i) => {
-    const me = m.teams?.find((t) => t.teamNumber === team);
-    if (!me) return;
-    const color = me.alliance === 'Red' ? 'red' : 'blue';
-    const other = color === 'red' ? 'blue' : 'red';
-    const partners = m.teams.filter((t) => t.alliance === me.alliance && t.teamNumber !== team).map((t) => t.teamNumber);
-    const opponents = m.teams.filter((t) => t.alliance !== me.alliance).map((t) => t.teamNumber);
-    const isPlayed = played(m, i);
-    let our = null, their = null, result = null;
-    if (isPlayed && m.scores?.[color]) {
-      our = m.scores[color].totalPoints;
-      their = m.scores[other].totalPoints;
-      result = our > their ? 'W' : our < their ? 'L' : 'T';
-    }
-    ours.push({
-      key: `${m.tournamentLevel}-${m.series}-${m.id}`,
-      label: matchLabel(m),
-      level: m.tournamentLevel,
-      color, station: STATION[me.station] || null,
-      partners, opponents,
-      time: m.scheduledStartTime,
-      played: isPlayed, our, their, result,
-      away: isPlayed ? null : Math.max(0, i - firstUnplayedIdx),
-    });
-  });
-
-  const next = ours.find((m) => !m.played) || null;
-  return {
-    team,
-    season: cache.season,
-    demo: !!state.settings.demo,
-    event: cache.event && {
-      code: cache.event.code, name: cache.event.name, start: cache.event.start, end: cache.event.end,
-      venue: cache.event.venue, city: cache.event.city, fields: cache.event.fieldCount,
-    },
-    error: cache.error,
-    updatedAt: cache.updatedAt,
-    totalMatches: sorted.length,
-    playedMatches: Math.min(firstUnplayedIdx, sorted.length),
-    ours, next,
-    playingNow: !!(next && next.away === 0),
-  };
-}
-
-// ---------- רשימת בדיקה: מתאפסת כשהמשחק הבא מתחלף ----------
-function checklistView(view) {
-  const key = view.next?.key || 'none';
-  if (state.checklistDone.matchKey !== key) {
-    state.checklistDone = { matchKey: key, done: [] };
-    save();
-  }
-  return state.settings.checklist.map((text, i) => ({ text, done: state.checklistDone.done.includes(i) }));
-}
-
-// ---------- זמן אמת (אירועים מהשרת) ----------
-const clients = new Set(); // {res, kind:'admin'|'member', memberId}
-function sse(res, event, data) {
-  res.write(`event: ${event}\ndata: ${JSON.stringify(data ?? {})}\n\n`);
-}
-function broadcast(event, data, filter = () => true) {
-  for (const c of clients) if (filter(c)) sse(c.res, event, data);
-}
-setInterval(() => broadcast('ping', { t: Date.now() }), 20_000);
-
-function online(memberId) {
-  for (const c of clients) if (c.memberId === memberId) return true;
-  return false;
-}
-
-// ---------- הרשאות ----------
+// ---------- בקשות ----------
 function isLocal(req) {
   const a = req.socket.remoteAddress || '';
   const host = (req.headers.host || '').split(':')[0];
@@ -239,261 +117,71 @@ function isLocal(req) {
   // מנהרה מתחברת מהמחשב עצמו, לכן בודקים גם את שם המארח
   return loop && (host === 'localhost' || host === '127.0.0.1' || host === '[::1]');
 }
-function auth(req, url) {
-  const key = url.searchParams.get('key') || req.headers['x-admin-key'];
-  if (isLocal(req) || key === state.settings.adminKey) return { admin: true };
-  const token = url.searchParams.get('token') || req.headers['x-token'];
-  if (token) {
-    const m = Object.values(state.members).find((x) => x.token === token);
-    if (m) { m.lastSeen = Date.now(); return { member: m }; }
-  }
-  return {};
+
+// מאיפה הבקשה. דרך מנהרה כל הבקשות מגיעות מהמחשב עצמו, ואז הכתובת האמיתית בכותרת.
+function clientIp(req) {
+  const a = req.socket.remoteAddress || '';
+  const loop = a === '127.0.0.1' || a === '::1' || a === '::ffff:127.0.0.1';
+  if (loop) return String(req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || a).split(',')[0].trim();
+  return a;
 }
 
-// ---------- מצב לכל סוג משתמש ----------
-function lanAddresses() {
-  const out = [];
-  for (const list of Object.values(os.networkInterfaces())) {
-    for (const i of list || []) if (i.family === 'IPv4' && !i.internal) out.push(i.address);
-  }
-  return out;
-}
-
-function memberList() {
-  return Object.values(state.members).map((m) => ({
-    id: m.id, name: m.name, online: online(m.id), lastSeen: m.lastSeen,
-    alert: m.alert || { state: 'none' },
-  }));
-}
-
-function adminState() {
-  const view = buildView();
-  return {
-    ...view,
-    checklist: checklistView(view),
-    settings: { ...state.settings, adminKey: undefined },
-    adminKey: state.settings.adminKey,
-    members: memberList(),
-    messages: state.messages.slice(-200),
-    batteries: state.batteries,
-    repairs: state.repairs,
-    addresses: lanAddresses().map((ip) => `http://${ip}:${PORT}`),
-  };
-}
-
-function memberState(m) {
-  const view = buildView();
-  return {
-    ...view,
-    checklist: checklistView(view),
-    me: { id: m.id, name: m.name, alert: m.alert || { state: 'none' } },
-    messages: state.messages.filter((x) => x.to === 'all' || x.to === m.id || x.from === m.id).slice(-100),
-    batteries: state.batteries,
-    repairs: state.repairs,
-  };
-}
-
-// ---------- בקשות ----------
 function send(res, code, body, type = 'application/json; charset=utf-8') {
-  res.writeHead(code, { 'content-type': type, 'cache-control': 'no-store' });
+  const headers = { 'content-type': type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' };
+  // הדפים לא נטענים בתוך אתר אחר, ולא טוענים מסגרות מאתרים אחרים
+  if (type.startsWith('text/html')) headers['content-security-policy'] = "frame-src 'self'; child-src 'self'; frame-ancestors 'self'";
+  res.writeHead(code, headers);
   res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body));
 }
 function readBody(req) {
   return new Promise((resolve) => {
     let d = '';
-    req.on('data', (c) => { d += c; if (d.length > 1e5) req.destroy(); });
-    req.on('end', () => { try { resolve(JSON.parse(d || '{}')); } catch { resolve({}); } });
+    req.on('data', (c) => { d += c; if (d.length > 1e5) { req.destroy(); resolve(null); } });
+    req.on('end', () => { try { const v = JSON.parse(d || '{}'); resolve(v && typeof v === 'object' ? v : {}); } catch { resolve({}); } });
+    req.on('error', () => resolve(null));
+    req.on('close', () => resolve(null));
   });
 }
-const clean = (s, n = 500) => String(s ?? '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n);
+
+// בקשת שינוי חייבת להגיע מהדפים של יוסטון עצמו, ולא מאתר אחר שפתוח בדפדפן של המחשב בפיט
+function sameSite(req) {
+  if (!String(req.headers['content-type'] || '').startsWith('application/json')) return false;
+  const origin = req.headers.origin;
+  if (!origin || origin === 'null') return !origin;
+  try { return new URL(origin).host === req.headers.host; } catch { return false; }
+}
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json',
-  '.webmanifest': 'application/manifest+json', '.png': 'image/png',
+  '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.woff2': 'font/woff2',
 };
 function serveStatic(res, file) {
+  if (file.includes('\0')) return send(res, 404, 'not found', 'text/plain');
   const p = path.normalize(path.join(PUBLIC, file));
-  if (!p.startsWith(PUBLIC)) return send(res, 404, 'not found', 'text/plain');
+  if (!p.startsWith(PUBLIC + path.sep)) return send(res, 404, 'not found', 'text/plain');
   fs.readFile(p, (e, buf) => {
     if (e) return send(res, 404, 'not found', 'text/plain');
     send(res, 200, buf, MIME[path.extname(p)] || 'application/octet-stream');
   });
 }
 
-function changed() { save(); broadcast('change'); }
+const server = http.createServer((req, res) => {
+  handle(req, res).catch((e) => {
+    console.error('request failed:', e && e.message);
+    try { if (!res.headersSent) send(res, 500, { error: 'שגיאה בשרת' }); else res.end(); } catch {}
+  });
+});
 
-const routes = {
-  'POST /api/join': async (req, res, a, body) => {
-    const name = clean(body.name, 30);
-    if (!name) return send(res, 400, { error: 'צריך שם' });
-    if (state.settings.joinCode && String(body.code || '').trim() !== state.settings.joinCode) {
-      return send(res, 403, { error: 'קוד ההצטרפות שגוי' });
-    }
-    // אותו שם = אותו חבר צוות (מתחבר מחדש מטלפון אחר)
-    let m = Object.values(state.members).find((x) => x.name === name);
-    if (!m) {
-      m = { id: rid(4), name, joinedAt: Date.now(), alert: { state: 'none' } };
-      state.members[m.id] = m;
-    }
-    m.token = rid(16);
-    m.lastSeen = Date.now();
-    changed();
-    send(res, 200, { token: m.token, id: m.id, team: state.settings.team });
-  },
-
-  'GET /api/state': (req, res, a) => {
-    if (a.admin) return send(res, 200, adminState());
-    if (a.member) return send(res, 200, memberState(a.member));
-    send(res, 401, { error: 'לא מחובר' });
-  },
-
-  'POST /api/alert': (req, res, a, body) => {
-    if (!a.admin) return send(res, 403, {});
-    const ids = body.id === 'all' ? Object.keys(state.members) : [body.id];
-    const reason = clean(body.reason, 80) || 'בוא לפיט עכשיו!';
-    for (const id of ids) {
-      const m = state.members[id];
-      if (!m) continue;
-      m.alert = { state: 'ringing', at: Date.now(), reason };
-      broadcast('alert', { reason }, (c) => c.memberId === id);
-    }
-    changed();
-    send(res, 200, { ok: true });
-  },
-
-  'POST /api/alert/cancel': (req, res, a, body) => {
-    if (!a.admin) return send(res, 403, {});
-    const m = state.members[body.id];
-    if (m) { m.alert = { state: 'none' }; broadcast('alert-stop', {}, (c) => c.memberId === m.id); }
-    changed();
-    send(res, 200, { ok: true });
-  },
-
-  'POST /api/ack': (req, res, a) => {
-    if (!a.member) return send(res, 403, {});
-    a.member.alert = { ...(a.member.alert || {}), state: 'ack', ackAt: Date.now() };
-    broadcast('ack', { name: a.member.name }, (c) => c.kind === 'admin');
-    changed();
-    send(res, 200, { ok: true });
-  },
-
-  'POST /api/message': (req, res, a, body) => {
-    const text = clean(body.text, 500);
-    if (!text) return send(res, 400, {});
-    let msg;
-    if (a.admin) {
-      const to = body.to === 'all' || state.members[body.to] ? body.to : 'all';
-      msg = { id: rid(5), from: 'pit', to, text, at: Date.now(), readBy: [] };
-    } else if (a.member) {
-      msg = { id: rid(5), from: a.member.id, fromName: a.member.name, to: 'pit', text, at: Date.now(), readBy: [] };
-    } else return send(res, 403, {});
-    state.messages.push(msg);
-    if (state.messages.length > 500) state.messages.splice(0, state.messages.length - 500);
-    broadcast('message', { from: msg.from === 'pit' ? 'הפיט' : msg.fromName, to: msg.to, text: msg.text }, (c) =>
-      msg.to === 'all' || c.memberId === msg.to || (msg.to === 'pit' && c.kind === 'admin'));
-    changed();
-    send(res, 200, { ok: true });
-  },
-
-  'POST /api/read': (req, res, a, body) => {
-    const who = a.admin ? 'pit' : a.member?.id;
-    if (!who) return send(res, 403, {});
-    let dirty = false;
-    for (const m of state.messages) {
-      if ((body.ids || []).includes(m.id) && !m.readBy.includes(who)) { m.readBy.push(who); dirty = true; }
-    }
-    if (dirty) changed();
-    send(res, 200, { ok: true });
-  },
-
-  'POST /api/check': (req, res, a, body) => {
-    if (!a.admin && !a.member) return send(res, 403, {});
-    if (body.reset) { state.checklistDone.done = []; changed(); return send(res, 200, { ok: true }); }
-    const i = Number(body.index);
-    const done = new Set(state.checklistDone.done);
-    if (body.done) done.add(i); else done.delete(i);
-    state.checklistDone.done = [...done];
-    changed();
-    send(res, 200, { ok: true });
-  },
-
-  'POST /api/battery': (req, res, a, body) => {
-    if (!a.admin && !a.member) return send(res, 403, {});
-    const STATUSES = ['charging', 'ready', 'robot', 'used'];
-    if (body.action === 'add') {
-      const name = clean(body.name, 20) || `סוללה ${state.batteries.length + 1}`;
-      state.batteries.push({ id: rid(4), name, status: 'charging', voltage: null, uses: 0, updatedAt: Date.now() });
-    } else {
-      const b = state.batteries.find((x) => x.id === body.id);
-      if (!b) return send(res, 404, {});
-      if (body.action === 'delete') state.batteries = state.batteries.filter((x) => x !== b);
-      if (body.action === 'status' && STATUSES.includes(body.status)) {
-        if (body.status === 'robot') {
-          // רק סוללה אחת ברובוט בכל רגע
-          for (const o of state.batteries) if (o.status === 'robot' && o !== b) o.status = 'used';
-          b.uses += 1;
-        }
-        b.status = body.status;
-      }
-      if (body.action === 'voltage') {
-        const v = Number(body.voltage);
-        b.voltage = Number.isFinite(v) && v > 0 && v < 20 ? Math.round(v * 100) / 100 : null;
-      }
-      b.updatedAt = Date.now();
-    }
-    changed();
-    send(res, 200, { ok: true });
-  },
-
-  'POST /api/repair': (req, res, a, body) => {
-    if (!a.admin && !a.member) return send(res, 403, {});
-    const by = a.admin ? 'הפיט' : a.member.name;
-    if (body.action === 'add') {
-      const text = clean(body.text, 200);
-      if (!text) return send(res, 400, {});
-      state.repairs.unshift({ id: rid(4), text, by, at: Date.now(), done: false });
-    } else {
-      const r = state.repairs.find((x) => x.id === body.id);
-      if (!r) return send(res, 404, {});
-      if (body.action === 'toggle') { r.done = !r.done; r.doneAt = r.done ? Date.now() : null; r.doneBy = by; }
-      if (body.action === 'delete') state.repairs = state.repairs.filter((x) => x !== r);
-    }
-    changed();
-    send(res, 200, { ok: true });
-  },
-
-  'POST /api/settings': async (req, res, a, body) => {
-    if (!a.admin) return send(res, 403, {});
-    const s = state.settings;
-    if (body.team !== undefined) { const t = parseInt(body.team, 10); if (t > 0 && t < 100000) s.team = t; }
-    if (body.season !== undefined) { const y = parseInt(body.season, 10); s.season = y > 2018 && y < 2100 ? y : null; }
-    if (body.eventCode !== undefined) s.eventCode = clean(body.eventCode, 20).replace(/[^A-Za-z0-9]/g, '');
-    if (body.joinCode !== undefined) s.joinCode = clean(body.joinCode, 12);
-    if (body.newJoinCode) s.joinCode = code6();
-    if (body.queueWarnAt !== undefined) s.queueWarnAt = Math.max(0, Math.min(10, parseInt(body.queueWarnAt, 10) || 0));
-    if (Array.isArray(body.checklist)) s.checklist = body.checklist.map((x) => clean(x, 120)).filter(Boolean).slice(0, 30);
-    if (body.demo !== undefined) { s.demo = !!body.demo; state.demoStartedAt = Date.now(); }
-    if (body.removeMember && state.members[body.removeMember]) {
-      broadcast('kicked', {}, (c) => c.memberId === body.removeMember);
-      delete state.members[body.removeMember];
-    }
-    if (body.clearMessages) state.messages = [];
-    save();
-    send(res, 200, { ok: true });
-    refresh();
-  },
-
-  'POST /api/refresh': (req, res, a) => {
-    if (!a.admin) return send(res, 403, {});
-    send(res, 200, { ok: true });
-    refresh();
-  },
-};
-
-const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, 'http://x');
-  const a = auth(req, url);
+async function handle(req, res) {
+  let url;
+  try { url = new URL(req.url, 'http://x'); if (url.host !== 'x') throw new Error('host'); } catch { return send(res, 400, 'bad request', 'text/plain'); }
+  const a = core.auth({
+    ip: clientIp(req),
+    local: isLocal(req),
+    key: url.searchParams.get('key') || req.headers['x-admin-key'],
+    token: url.searchParams.get('token') || req.headers['x-token'],
+  });
 
   if (req.method === 'GET' && url.pathname === '/api/stream') {
     if (!a.admin && !a.member) return send(res, 401, {});
@@ -502,30 +190,49 @@ const server = http.createServer(async (req, res) => {
       connection: 'keep-alive', 'x-accel-buffering': 'no',
     });
     res.write('retry: 2000\n\n');
-    const c = { res, kind: a.admin ? 'admin' : 'member', memberId: a.member?.id };
-    clients.add(c);
-    if (a.member?.alert?.state === 'ringing') sse(res, 'alert', { reason: a.member.alert.reason });
-    broadcast('change', {}, (x) => x.kind === 'admin');
-    req.on('close', () => { clients.delete(c); broadcast('change', {}, (x) => x.kind === 'admin'); });
+    const bye = core.connect({
+      kind: a.admin ? 'admin' : 'member',
+      memberId: a.member && a.member.id,
+      send: (event, data) => res.write(`event: ${event}\ndata: ${JSON.stringify(data ?? {})}\n\n`),
+      close: () => res.end(),
+    });
+    req.on('close', bye);
     return;
   }
 
-  const route = routes[`${req.method} ${url.pathname}`];
-  if (route) {
+  if (url.pathname.startsWith('/api/')) {
+    if (req.method === 'POST' && !sameSite(req)) return send(res, 403, { error: 'בקשה לא מורשית' });
     const body = req.method === 'POST' ? await readBody(req) : {};
-    try { return await route(req, res, a, body); } catch (e) {
+    if (body === null) return;
+    let r;
+    try { r = core.handle(req.method, url.pathname, a, body); } catch (e) {
       console.error(e);
       return send(res, 500, { error: 'שגיאה בשרת' });
     }
+    if (!r) return send(res, 404, {});
+    send(res, r.code, r.body);
+    if (r.refresh) refresh();
+    return;
   }
 
   if (req.method !== 'GET') return send(res, 404, {});
-  if (url.pathname === '/' ) {
-    // המסך הראשי נפתח רק מהמחשב עצמו או עם מפתח מנהל
-    return a.admin ? serveStatic(res, 'dashboard.html') : serveStatic(res, 'phone.html');
-  }
-  if (url.pathname === '/m' || url.pathname === '/phone') return serveStatic(res, 'phone.html');
-  serveStatic(res, url.pathname.slice(1));
+  let file;
+  try { file = path.posix.normalize(decodeURIComponent(url.pathname)).replace(/^\/+/, ''); } catch { return send(res, 404, 'not found', 'text/plain'); }
+  // מסך הפיט נפתח רק מהמחשב עצמו או עם מפתח מנהל
+  if (file === '' || file === 'dashboard.html') return serveStatic(res, a.admin ? 'dashboard.html' : 'phone.html');
+  if (file === 'm' || file === 'phone') return serveStatic(res, 'phone.html');
+  serveStatic(res, file);
+}
+
+process.on('uncaughtException', (e) => console.error('unexpected error:', e && e.stack));
+process.on('unhandledRejection', (e) => console.error('unexpected error:', e));
+
+// סימן חיים לכל מי שמחובר, כדי שהחיבור לא ייסגר ושהטלפון יידע שהוא עדיין מחובר
+setInterval(() => core.broadcast('ping', { t: Date.now() }), 20_000);
+
+server.on('error', (e) => {
+  console.error(e.code === 'EADDRINUSE' ? `\n  יוסטון כבר פועל על פורט ${PORT}. סוגרים את החלון השני.\n` : e);
+  process.exit(1);
 });
 
 server.listen(PORT, '0.0.0.0', () => {
@@ -534,9 +241,9 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`  מסך הפיט:      http://localhost:${PORT}`);
   for (const ip of addrs) console.log(`  לטלפונים:      http://${ip}:${PORT}/m`);
   console.log(`  קוד הצטרפות:   ${state.settings.joinCode || '(ללא)'}`);
-  console.log(`  מפתח מנהל (לפתיחת מסך הפיט ממחשב אחר): /?key=${state.settings.adminKey}\n`);
+  console.log('  לפתיחת מסך הפיט ממחשב אחר: הקישור נמצא בחלון "חיבור טלפונים והגדרות"\n');
   refresh();
   setInterval(refresh, REFRESH_MS);
   // במצב הדגמה מרעננים לעתים קרובות כדי לראות את ההתקדמות
-  setInterval(() => { if (state.settings.demo) broadcast('change'); }, 15_000);
+  setInterval(() => { if (state.settings.demo) core.broadcast('change'); }, 15_000);
 });

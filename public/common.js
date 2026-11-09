@@ -1,15 +1,21 @@
 // כלים משותפים למסך הפיט ולטלפון
 const Pit = (() => {
-  let token = null;
-  try { token = localStorage.getItem('pit-token'); } catch {}
+  // אחסון בטלפון. בסימולטור כל טלפון מקבל אחסון משלו (HoustonStore).
+  const store = window.HoustonStore || {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} },
+  };
+  let token = store.get('pit-token');
   const keyFromUrl = new URLSearchParams(location.search).get('key');
 
+  // מסך הפיט לא שולח אסימון של טלפון, גם אם נשאר כזה בדפדפן
+  const isPit = window.HoustonRole === 'pit';
   function authQS() {
-    if (keyFromUrl) return `key=${encodeURIComponent(keyFromUrl)}`;
-    if (token) return `token=${encodeURIComponent(token)}`;
+    if (keyFromUrl && isPit) return `key=${encodeURIComponent(keyFromUrl)}`;
+    if (token && !isPit) return `token=${encodeURIComponent(token)}`;
     return '';
   }
-  function setToken(t) { token = t; try { t ? localStorage.setItem('pit-token', t) : localStorage.removeItem('pit-token'); } catch {} }
+  function setToken(t) { token = t || null; store.set('pit-token', token); }
 
   async function api(path, body) {
     const sep = path.includes('?') ? '&' : '?';
@@ -17,36 +23,47 @@ const Pit = (() => {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
     });
     const data = await r.json().catch(() => ({}));
-    if (!r.ok) { const e = new Error(data.error || r.status); e.status = r.status; throw e; }
+    if (!r.ok) { const e = new Error(data.error || String(r.status)); e.status = r.status; throw e; }
     return data;
   }
 
+  // חיבור חי לשרת. אם הדפדפן מוותר (למשל שגיאה ממנהרה כשהשרת הופעל מחדש), פותחים חיבור חדש.
   function stream(handlers) {
-    const es = new EventSource(`/api/stream?${authQS()}`);
-    for (const [ev, fn] of Object.entries(handlers)) {
-      es.addEventListener(ev, (e) => { let d = {}; try { d = JSON.parse(e.data); } catch {} fn(d); });
+    let es = null, closed = false, retry = null;
+    function open() {
+      es = new EventSource(`/api/stream?${authQS()}`);
+      for (const [ev, fn] of Object.entries(handlers)) {
+        es.addEventListener(ev, (e) => { let d = {}; try { d = JSON.parse(e.data); } catch {} fn(d); });
+      }
+      es.onerror = () => {
+        handlers.down && handlers.down();
+        if (es.readyState === EventSource.CLOSED && !closed) { clearTimeout(retry); retry = setTimeout(open, 3000); }
+      };
+      es.onopen = () => handlers.up && handlers.up();
     }
-    es.onerror = () => handlers.down && handlers.down();
-    es.onopen = () => handlers.up && handlers.up();
-    return es;
+    open();
+    return { close() { closed = true; clearTimeout(retry); es && es.close(); } };
   }
 
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const time = (t) => t ? new Date(t).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '';
+  const time = (t) => (t ? new Date(t).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', hour12: false }) : '');
   const ago = (t) => {
     if (!t) return '';
-    const s = Math.round((Date.now() - t) / 1000);
-    if (s < 60) return 'עכשיו';
-    if (s < 3600) return `לפני ${Math.round(s / 60)} דק׳`;
-    return time(t);
+    const s = Math.max(0, Math.round((Date.now() - t) / 1000));
+    if (s < 45) return 'עכשיו';
+    if (s < 3600) return `לפני ${Math.max(1, Math.round(s / 60))} דק׳`;
+    return `ב־${time(t)}`;
   };
-  const colorName = (c) => (c === 'red' ? 'אדומה' : 'כחולה');
-  const fixed = (v, n = 1) => (v == null ? '—' : Number(v).toFixed(n));
+  const seconds = (t) => Math.max(0, Math.floor((Date.now() - t) / 1000));
+  const allianceName = (c) => (c === 'red' ? 'ברית אדומה' : 'ברית כחולה');
+  const other = (c) => (c === 'red' ? 'blue' : 'red');
+  const RESULT = { W: 'ניצחון', L: 'הפסד', T: 'תיקו' };
 
   function teamsHtml(list, color, me) {
-    return list.map((n) => `<span class="tn ${color} ${n === me ? 'me' : ''}">${n}</span>`).join('');
+    return list.map((n) => `<span class="tn ${n === me ? 'me' : color}">${esc(n)}</span>`).join('');
   }
   function awayText(n) {
+    if (n == null) return '';
     if (n === 0) return 'על המגרש עכשיו';
     if (n === 1) return 'עוד משחק אחד';
     return `עוד ${n} משחקים`;
@@ -63,12 +80,14 @@ const Pit = (() => {
     } catch {}
   }
   function beep(freq = 880, dur = 0.18, vol = 0.6) {
-    if (!ctx) return;
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = 'square'; o.frequency.value = freq;
-    g.gain.setValueAtTime(vol, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + dur);
+    if (!ctx || window.HoustonMute) return;
+    try {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'square'; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+      o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + dur);
+    } catch {}
   }
   function alarm(on, pattern = 'alarm') {
     clearInterval(loop); loop = null;
@@ -84,10 +103,21 @@ const Pit = (() => {
   let toastTimer;
   function toast(text) {
     let el = document.querySelector('.toast');
-    if (!el) { el = document.createElement('div'); el.className = 'toast'; document.body.append(el); }
+    if (!el) {
+      el = document.createElement('div'); el.className = 'toast';
+      el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
+      document.body.append(el);
+    }
     el.textContent = text; el.classList.add('show');
     clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
   }
 
-  return { api, stream, esc, time, ago, colorName, fixed, teamsHtml, awayText, unlockAudio, beep, alarm, toast, setToken, get token() { return token; } };
+  // סיבות קריאה מוכנות, כדי שבלחץ לא צריך להקליד
+  const REASONS = ['לתור עכשיו', 'להביא סוללה', 'צריך נהג', 'בדיקת שופטים', 'תיקון דחוף'];
+
+  return {
+    api, stream, esc, time, ago, seconds, allianceName, other, RESULT, teamsHtml, awayText,
+    unlockAudio, beep, alarm, toast, setToken, store, REASONS,
+    get token() { return token; },
+  };
 })();

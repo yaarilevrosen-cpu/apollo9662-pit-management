@@ -4,10 +4,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-/** אחרי הפעלה מחדש של הטלפון: אם היינו מחוברים לפיט, מתחברים שוב. */
+/** אחרי הפעלה מחדש של הטלפון או עדכון של יוסטון: אם היינו מחוברים לפיט, מתחברים שוב. */
 public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context c, Intent i) {
-        if (Intent.ACTION_BOOT_COMPLETED.equals(i.getAction())) AlertService.startIfReady(c);
+        String a = i.getAction();
+        // אחרי הפעלה מחדש, ואחרי עדכון של האפליקציה
+        if (Intent.ACTION_BOOT_COMPLETED.equals(a) || Intent.ACTION_MY_PACKAGE_REPLACED.equals(a)) AlertService.startIfReady(c);
     }
 }

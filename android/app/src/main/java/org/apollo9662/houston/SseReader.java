@@ -7,13 +7,15 @@ import java.io.IOException;
 final class SseReader {
     interface Listener { void onEvent(String event, String data); }
     interface Running { boolean get(); }
+    interface Line { void got(); }
 
     private SseReader() {}
 
-    static void read(BufferedReader r, Running running, Listener l) throws IOException {
+    static void read(BufferedReader r, Running running, Listener l, Line onLine) throws IOException {
         String line, event = "message";
         StringBuilder data = new StringBuilder();
         while (running.get() && (line = r.readLine()) != null) {
+            onLine.got();
             if (line.isEmpty()) {
                 if (data.length() > 0 || !"message".equals(event)) l.onEvent(event, data.toString());
                 event = "message";

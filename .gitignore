@@ -20,3 +20,13 @@ android/keystore.properties
 *.jks
 *.keystore
 *.apk
+
+# יומנים (השרת מדפיס את קוד ההצטרפות) ותוצרים נוספים של אנדרואיד
+*.log
+*.aab
+*.p12
+*.pem
+android/app/release/
+android/captures/
+.idea/
+*.iml

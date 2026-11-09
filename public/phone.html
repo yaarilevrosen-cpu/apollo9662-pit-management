@@ -3,262 +3,401 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b0e14">
+<meta name="theme-color" content="#161b19">
+<meta name="referrer" content="no-referrer">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="logo.svg">
 <title>יוסטון</title>
 <link rel="stylesheet" href="common.css">
 <style>
-  body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
-  .wrap { max-width: 560px; margin: 0 auto; padding: 14px; }
-  .top { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 5; }
-  .top img { width: 28px; height: 28px; }
-  .top b { flex: 1; }
-  .composer { display: grid !important; grid-template-columns: 1fr !important; }
-  .toast { bottom: calc(90px + env(safe-area-inset-bottom)); }
-  #title { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .quick { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
-  .quick button { white-space: nowrap; border-radius: 99px; padding: 6px 12px; font-size: 14px; }
-  nav { position: fixed; bottom: 0; inset-inline: 0; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--panel); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
-  nav button { border: 0; border-radius: 0; background: none; padding: 10px 4px 12px; display: grid; gap: 2px; justify-items: center; font-size: 13px; color: var(--muted); position: relative; }
-  nav button span { font-size: 22px; }
-  nav button.on { color: var(--accent); }
-  nav .badge { position: absolute; top: 6px; inset-inline-end: 28%; background: var(--red); color: #fff; border-radius: 99px; font-size: 11px; min-width: 18px; padding: 0 5px; }
-  .card { border-radius: 18px; padding: 18px; border: 1px solid var(--line); background: var(--panel); margin-bottom: 12px; }
-  .card.red { background: radial-gradient(140% 140% at 100% 0%, #5a1520 0%, #1b0d12 65%); border-color: #6b2230; }
-  .card.blue { background: radial-gradient(140% 140% at 100% 0%, #123267 0%, #0b1424 65%); border-color: #23417a; }
-  .card .label { font-size: 56px; font-weight: 800; line-height: 1; }
-  .card .away { font-size: 20px; font-weight: 700; margin-top: 6px; }
-  .card.red .alli { color: #ff8a96; } .card.blue .alli { color: #8ab8ff; }
-  .sides { display: grid; gap: 8px; margin-top: 14px; }
-  .sides > div { background: #0005; border-radius: 12px; padding: 8px 10px; }
-  .sides small { color: var(--muted); display: block; margin-bottom: 4px; }
-  .msgs { display: flex; flex-direction: column; gap: 8px; min-height: 50vh; }
-  .msg { max-width: 85%; padding: 8px 12px; border-radius: 14px; background: var(--panel-2); align-self: flex-start; }
-  .msg.mine { align-self: flex-end; background: #2a2110; border: 1px solid #5a430f; }
-  .msg small { display: block; color: var(--muted); font-size: 12px; }
-  .composer { position: sticky; bottom: calc(76px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 10px 0; background: var(--bg); }
-  .bcard { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); margin-bottom: 8px; }
-  .bcard b { flex: 1; }
-  .bcard.robot { border-color: var(--accent); } .bcard.ready { border-color: #1d5a39; } .bcard.charging { border-color: #23417a; }
-  .join { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+  body { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 12px 12px 16px; display: grid; gap: 12px; }
+  .head-wrap { position: sticky; top: 0; z-index: 5; }
+  .top { display: flex; align-items: center; gap: 10px; padding: 10px 14px; padding-top: calc(10px + env(safe-area-inset-top)); background: var(--well); border-bottom: 1px solid var(--rule-soft); }
+  .top img { width: 30px; height: 30px; }
+  .top .t { flex: 1; min-width: 0; line-height: 1.2; }
+  .top .t b { font-family: var(--display); font-size: 30px; font-weight: 700; display: block; line-height: .95; }
+  .top .t > span { font-size: 13px; color: var(--dim); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .conn { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--dim); }
+
+  /* פסים בראש המסך: אין חיבור, תור, קריאה שפוספסה */
+  .strip { padding: 10px 14px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .strip.down { background: var(--well); color: var(--phosphor); border-bottom: 3px solid var(--signal); font-weight: 700; }
+  .strip.down span:last-child { flex: 1; }
+  .strip.queue { background: var(--amber); color: var(--amber-ink); }
+  .strip.missed { background: var(--amber-soft); color: #ffd36b; }
+  .strip span { flex: 1; }
+  .strip button { min-height: 36px; padding: 4px 12px; font-weight: 700; }
+
+  nav { position: fixed; bottom: 0; inset-inline: 0; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--well); border-top: 1px solid var(--rule-soft); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
+  nav button { border: 0; border-radius: 0; background: none; padding: 9px 4px 10px; display: grid; gap: 3px; justify-items: center; font-size: 13px; color: var(--dim); position: relative; min-height: 62px; }
+  nav button svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  nav button[aria-current="page"] { color: var(--phosphor); font-weight: 600; }
+  nav button[aria-current="page"]::before { content: ""; position: absolute; top: 0; inset-inline: 28%; height: 3px; background: var(--phosphor); border-radius: 0 0 3px 3px; }
+  nav .badge { position: absolute; top: 6px; inset-inline-end: 26%; background: var(--amber); color: var(--amber-ink); border-radius: 99px; font-size: 11.5px; font-weight: 700; min-width: 19px; padding: 0 5px; line-height: 19px; }
+
+  /* המשחק הבא */
+  .next { background: var(--well); border-radius: var(--r-module); padding: 14px 16px 16px; border-top: 10px solid var(--rule); transition: opacity .2s; }
+  .next.red { border-top-color: var(--red); } .next.blue { border-top-color: var(--blue); }
+  .next.stale { opacity: .5; filter: grayscale(.6); }
+  .next .head { display: flex; justify-content: space-between; color: var(--dim); font-size: 14px; }
+  .next .mid { display: flex; align-items: flex-end; gap: 14px; margin: 4px 0 12px; }
+  .next .label { font-size: 104px; }
+  .next .who { display: grid; padding-bottom: 8px; }
+  .next .alli { font-family: var(--display); font-size: 36px; font-weight: 700; line-height: .95; }
+  .next.red .alli { color: var(--red); } .next.blue .alli { color: var(--blue); }
+  .next .station { color: var(--dim); font-size: 15px; }
+  .next .away { display: flex; align-items: baseline; gap: 10px; padding: 10px 12px; background: var(--bezel); border-radius: var(--r-control); margin-bottom: 12px; }
+  .next .away .readout { font-size: 56px; }
+  .next.now .away { background: var(--amber); color: var(--amber-ink); }
+  .next .sides { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .next .sides small { color: var(--dim); display: block; margin-bottom: 4px; font-size: 13px; }
+  .next .sides .tn { font-size: 18px; }
+  .next.idle .label { font-size: 48px; color: var(--dim); text-wrap: balance; line-height: .95; }
+
+  /* רשימת המשחקים */
+  .games li { gap: 12px; }
+  .games .lbl { font-family: var(--display); font-size: 30px; font-weight: 700; width: 58px; line-height: 1; }
+  .games .bar { width: 4px; align-self: stretch; border-radius: 2px; background: var(--rule); }
+  .games li.red .bar { background: var(--red); } .games li.blue .bar { background: var(--blue); }
+  .games li.is-next { background: var(--amber-soft); margin: 0 -10px; padding-inline: 10px; border-radius: var(--r-control); }
+  .games .grow { flex: 1; }
+  .games .W { color: var(--go); font-weight: 700; } .games .L, .games .T { color: var(--dim); font-weight: 700; }
+
+  /* הודעות */
+  section[data-tab="chat"]:not([hidden]) { display: flex; flex-direction: column; min-height: calc(100dvh - 190px - env(safe-area-inset-bottom)); }
+  .msgs { display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: flex-end; }
+  .msg { max-width: 86%; padding: 8px 12px 6px; border-radius: 12px; background: var(--bezel); align-self: flex-start; }
+  .msg.mine { align-self: flex-end; background: #34403b; }
+  .msg .meta { display: flex; gap: 10px; color: var(--dim); font-size: 12.5px; margin-top: 2px; }
+  .composer { position: sticky; bottom: calc(74px + env(safe-area-inset-bottom)); display: grid; gap: 8px; padding: 10px 0 4px; background: var(--console); }
+  .quick { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(to left, #000 85%, transparent); mask-image: linear-gradient(to left, #000 85%, transparent); padding-inline-end: 24px; }
+  .quick button { white-space: nowrap; border-radius: 99px; padding: 6px 14px; font-size: 15px; }
+  .composer form { display: flex; gap: 8px; }
+
+  /* סוללות */
+  .bat { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-control); background: var(--well); border-inline-start: 4px solid var(--rule); margin-bottom: 8px; }
+  .bat b { flex: 1; }
+  .bat.robot { border-inline-start-color: var(--amber); } .bat.ready { border-inline-start-color: var(--go); }
+  .bat select { width: 48px; flex: none; min-height: 40px; padding: 4px 6px; }
+  .bat .step { font-weight: 700; min-width: 76px; flex: none; padding-inline: 10px; }
+  .bat .info { flex: 1; display: grid; gap: 2px; min-width: 0; }
+  .bat .meta { display: flex; flex-wrap: wrap; gap: 2px 8px; color: var(--dim); font-size: 13px; }
+  .bat .meta span { white-space: nowrap; }
+
+  form.inline { display: flex; gap: 8px; margin-bottom: 6px; }
+  .repairs .who { display: block; font-size: 13px; color: var(--dim); }
+
+  /* הצטרפות */
+  .join { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
   .join form { width: 100%; max-width: 380px; display: grid; gap: 14px; }
-  .join h1 { margin: 0; text-align: center; }
-  .join img { width: 72px; margin: 0 auto; display: block; }
-  .err { color: var(--red); min-height: 1.4em; text-align: center; }
-  .settings li { justify-content: space-between; }
-  .overlay.alarm small { opacity: .8; font-size: 16px; }
-  .overlay.alarm .go { font-weight: 800; opacity: 1; }
-  .tip { font-size: 14px; background: var(--panel-2); border-radius: 12px; padding: 10px 12px; border: 1px solid var(--line); }
-  [hidden] { display: none !important; }
+  .join .logo { width: 84px; margin: 0 auto; display: block; }
+  .join h1 { margin: 0; text-align: center; font-family: var(--display); font-size: 96px; line-height: .85; }
+  .join p { text-align: center; margin: 0 0 8px; color: var(--dim); }
+  label.f { display: grid; gap: 6px; font-size: 14px; color: var(--dim); }
+  .join input { font-size: 19px; min-height: 52px; }
+  .join button { min-height: 56px; font-size: 19px; }
+  .err { color: #ff9aa1; min-height: 1.5em; text-align: center; }
+
+  .me li { justify-content: space-between; }
+  .tip { font-size: 15px; background: var(--well); border-radius: var(--r-control); padding: 10px 12px; }
+  .tip.warn { background: var(--amber-soft); color: #ffd36b; }
+  .tip.ok { background: var(--go-soft); color: #9ef0c0; }
 </style>
 </head>
 <body>
 
 <section class="join" id="joinView" hidden>
   <form id="joinForm">
-    <img src="logo.svg" alt="">
+    <img class="logo" src="logo.svg" alt="">
     <h1>יוסטון</h1>
-    <p class="muted" style="text-align:center;margin:0">התחברו כדי לקבל קריאות והודעות מהפיט</p>
-    <label>השם שלך<input id="jName" autocomplete="name" required maxlength="30"></label>
-    <label>קוד הצטרפות<input id="jCode" inputmode="numeric" autocomplete="one-time-code" dir="ltr"></label>
-    <button class="primary" style="padding:14px">התחברות</button>
-    <div class="err" id="jErr"></div>
+    <p>מתחברים לפיט כדי לקבל קריאות והודעות</p>
+    <label class="f">השם שלך<input id="jName" autocomplete="name" required maxlength="30"></label>
+    <label class="f">קוד הצטרפות<input id="jCode" inputmode="numeric" autocomplete="one-time-code" dir="ltr"></label>
+    <button class="primary">התחברות</button>
+    <div class="err" id="jErr" role="alert"></div>
   </form>
 </section>
 
 <div id="appView" hidden>
-  <div class="top"><img src="logo.svg" alt=""><b id="title">יוסטון</b><span class="pill" id="conn"><span class="dot"></span></span></div>
+  <div class="head-wrap">
+  <div class="top">
+    <img src="logo.svg" alt="">
+    <div class="t"><b>יוסטון</b><span id="title"></span></div>
+    <span class="conn" id="conn"><span class="lamp"></span></span>
+  </div>
+  <div class="strips">
+    <div class="strip down" id="downStrip" role="alert" hidden><span class="lamp bad"></span><span>אין חיבור לפיט. קריאות לא יגיעו לטלפון הזה עד שהחיבור יחזור.</span></div>
+    <div class="strip missed" id="missedStrip" hidden><span>פספסת קריאה מהפיט</span><button id="missedAck">קיבלתי, בדרך!</button></div>
+    <div class="strip queue" id="queueStrip" hidden><span id="queueText"></span></div>
+  </div>
+  </div>
   <div class="wrap">
     <section data-tab="match">
-      <div id="nextCard" class="card"></div>
-      <div class="panel" style="margin-bottom:12px">
-        <h2>רשימת בדיקה</h2>
-        <ul class="list" id="checklist"></ul>
+      <div id="nextCard" class="next" aria-live="polite"></div>
+      <div class="module" style="margin-top:12px">
+        <header><h2>לפני המשחק</h2><span class="tag" id="checkCount"></span></header>
+        <ul class="rows" id="checklist"></ul>
       </div>
-      <div class="panel">
-        <h2>המשחקים שלנו</h2>
-        <ul class="list" id="matches"></ul>
+      <div class="module" style="margin-top:12px">
+        <header><h2>המשחקים שלנו</h2><span class="tag" id="record"></span></header>
+        <ul class="rows games" id="matches"></ul>
       </div>
     </section>
 
     <section data-tab="chat" hidden>
-      <div class="msgs" id="msgs"></div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
       <div class="composer">
         <div class="quick">
           <button data-quick="בדרך!">בדרך!</button>
           <button data-quick="עוד 2 דקות">עוד 2 דקות</button>
-          <button data-quick="צריך עזרה בפיט">צריך עזרה</button>
           <button data-quick="מוכנים בתור">מוכנים בתור</button>
+          <button data-quick="צריך עזרה בפיט">צריך עזרה</button>
         </div>
-        <form id="sendForm" class="row"><input id="sendText" placeholder="הודעה לפיט…" autocomplete="off"><button class="primary">שלח</button></form>
+        <form id="sendForm"><input id="sendText" placeholder="הודעה לפיט" autocomplete="off" aria-label="הודעה לפיט"><button class="primary">שליחה</button></form>
       </div>
     </section>
 
-
     <section data-tab="pit" hidden>
-      <div class="panel" style="margin-bottom:12px">
-        <h2>סוללות</h2>
+      <div class="module">
+        <header><h2>סוללות</h2></header>
         <div id="batteries"></div>
       </div>
-      <div class="panel">
-        <h2>יומן תיקונים</h2>
-        <form class="row" id="repairForm" style="margin-bottom:8px"><input id="repairText" placeholder="מה צריך לתקן?"><button>הוסף</button></form>
-        <ul class="list" id="repairs"></ul>
+      <div class="module" style="margin-top:12px">
+        <header><h2>תיקונים</h2></header>
+        <form class="inline" id="repairForm"><input id="repairText" placeholder="מה צריך לתקן?" aria-label="תיקון חדש"><button>הוספה</button></form>
+        <ul class="rows repairs" id="repairs"></ul>
       </div>
     </section>
 
     <section data-tab="me" hidden>
-      <div class="panel settings stack">
-        <h2>הטלפון שלי</h2>
-        <ul class="list">
-          <li><span>מחובר בתור</span><b id="meName"></b></li>
-          <li class="web-only"><span>התראות</span><button id="notifBtn">אפשר</button></li>
-          <li class="web-only"><span>להשאיר את המסך דלוק</span><button id="wakeBtn">הפעל</button></li>
-          <li><span>בדיקת צלצול</span><button id="testBtn">צלצל</button></li>
+      <div class="module me">
+        <header><h2>הטלפון שלי</h2></header>
+        <ul class="rows">
+          <li><span>השם בטלפון הזה</span><b id="meName"></b></li>
+          <li class="web-only"><span>התראות</span><span id="notifState"></span></li>
+          <li class="web-only"><span>להשאיר את המסך דלוק</span><button id="wakeBtn">הפעלה</button></li>
+          <li><span>בדיקת צלצול</span><button id="testBtn">צלצול</button></li>
         </ul>
-        <ul class="list" id="nativeList" hidden></ul>
-        <div class="tip" id="tip"></div>
-        <button class="ghost" id="logout">התנתקות</button>
+        <ul class="rows" id="nativeList" hidden></ul>
+        <div class="tip" id="tip" style="margin:10px 0"></div>
+        <button class="quiet" id="logout">התנתקות</button>
       </div>
     </section>
   </div>
 
-  <nav>
-    <button class="on" data-go="match"><span>🏁</span>משחק</button>
-    <button data-go="chat"><span>💬</span>הודעות<i class="badge" id="badge" hidden></i></button>
-    <button data-go="pit"><span>🔋</span>פיט</button>
-    <button data-go="me"><span>⚙️</span>אני</button>
+  <nav aria-label="לשוניות">
+    <button aria-current="page" data-go="match"><svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>משחק</button>
+    <button data-go="chat"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>הודעות<i class="badge" id="badge" hidden></i></button>
+    <button data-go="pit"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 10v4M8 12h6M11 9v6"/></svg>פיט</button>
+    <button data-go="me"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>אני</button>
   </nav>
 </div>
 
-<div class="overlay alarm" id="alarm">
-  <h1>יוסטון, יש לנו בעיה</h1>
-  <p class="go">בוא לפיט עכשיו!</p>
-  <p id="alarmReason"></p>
-  <button id="ackBtn">קיבלתי, בדרך!</button>
-  <small>הצלצול ייעצר לבד אחרי שתי דקות</small>
+<div class="alarm flash" id="alarm" role="alertdialog" aria-labelledby="alarmReason">
+  <p class="go-now">יוסטון, יש לנו בעיה</p>
+  <h1 id="alarmReason">לפיט, עכשיו!</h1>
+  <button class="ack" id="ackBtn">קיבלתי, בדרך!</button>
+  <p class="sending" id="ackState"></p>
+  <small id="alarmNote">הצלצול ייעצר לבד אחרי שתי דקות</small>
 </div>
 
 <script src="common.js"></script>
 <script>
-const { api, esc, time, colorName, teamsHtml, awayText } = Pit;
+const { api, esc, time, allianceName, other, RESULT, teamsHtml, awayText } = Pit;
 // באפליקציית האנדרואיד: האפליקציה מצלצלת בעצמה, גם במצב שקט ומעל מסך נעול
 const NATIVE = window.HoustonAndroid || null;
 const $ = (s) => document.querySelector(s);
 let S = null, es = null, tab = 'match', wake = null;
+let connected = true, downTimer = null, queueWarned = null;
 const params = new URLSearchParams(location.search);
 if (params.get('code')) $('#jCode').value = params.get('code');
-try { $('#jName').value = localStorage.getItem('pit-name') || ''; } catch {}
+$('#jName').value = Pit.store.get('pit-name') || '';
+const plural = (n, one, many) => (n === 1 ? one : `${n} ${many}`);
+const uses = (n) => (n ? plural(n, 'שימוש אחד', 'שימושים') : 'עוד לא בשימוש');
+const BSTEP = { charging: ['ready', 'מוכנה'], ready: ['robot', 'לרובוט'], robot: ['used', 'הוצאה'], used: ['charging', 'לטעינה'] };
 
 // ---------- התחברות ----------
-function showJoin(msg) { NATIVE?.clearSession(); $('#joinView').hidden = false; $('#appView').hidden = true; $('#jErr').textContent = msg || ''; es?.close(); }
+function showJoin(msg) {
+  NATIVE?.clearSession();
+  es?.close(); es = null;
+  $('#joinView').hidden = false; $('#appView').hidden = true; $('#jErr').textContent = msg || '';
+  ring(false);
+}
 $('#joinForm').onsubmit = async (e) => {
   e.preventDefault();
   Pit.unlockAudio();
+  const name = $('#jName').value.trim();
+  if (!name) return ($('#jErr').textContent = 'צריך לכתוב שם');
   try {
-    const name = $('#jName').value.trim();
     const r = await api('/api/join', { name, code: $('#jCode').value });
     Pit.setToken(r.token);
     NATIVE?.setSession(r.token);
-    try { localStorage.setItem('pit-name', name); } catch {}
-    history.replaceState(null, '', location.pathname);
+    Pit.store.set('pit-name', name);
+    try { history.replaceState(null, '', location.pathname); } catch {}
     start();
-  } catch (err) { $('#jErr').textContent = err.message === 'Failed to fetch' ? 'אין חיבור לשרת הפיט' : err.message; }
+  } catch (err) { $('#jErr').textContent = err.message === 'Failed to fetch' ? 'אין חיבור לשרת הפיט. בודקים שהטלפון מחובר לאותה רשת כמו המחשב בפיט.' : err.message; }
 };
 
 async function start() {
   NATIVE?.setSession(Pit.token);
   $('#joinView').hidden = true; $('#appView').hidden = false;
-  await load();
+  if (!(await load())) return;
   es?.close();
   es = Pit.stream({
     change: load,
     alert: (d) => ring(true, d.reason),
     'alert-stop': () => ring(false),
     message: (d) => { load(); if (tab !== 'chat') { navigator.vibrate?.(200); notify(`הודעה מ${d.from}`); } },
-    kicked: () => { Pit.setToken(null); showJoin('נותקת מהפיט'); },
-    up: () => setConn(true), down: () => setConn(false),
+    kicked: () => { Pit.setToken(null); showJoin('נותקת מהפיט. אפשר להתחבר שוב.'); },
+    up: () => { setConn(true); load(); },
+    down: () => setConn(false),
   });
 }
 
 async function load() {
-  try { S = await api('/api/state'); render(); }
-  catch (e) { if (e.status === 401 || e.status === 403) { Pit.setToken(null); showJoin(); } }
+  try {
+    const s = await api('/api/state');
+    if (!s.me) { Pit.setToken(null); showJoin('צריך להתחבר שוב.'); return false; }
+    S = s; render(); return true;
+  } catch (e) {
+    if (e.status === 401 || e.status === 403) { Pit.setToken(null); showJoin('החיבור לפיט פג. מתחברים שוב עם השם והקוד.'); return false; }
+    return !!S;
+  }
 }
 
-function setConn(on) { $('#conn').innerHTML = `<span class="dot ${on ? 'on' : ''}"></span>${on ? 'מחובר' : 'מנותק'}`; }
+// ניתוק קצר לא מבהיל. אחרי חמש שניות בלי חיבור מופיע פס אדום.
+function setConn(on) {
+  connected = on;
+  $('#conn').innerHTML = `<span class="lamp ${on ? 'on' : 'bad'}"></span>${on ? 'מחובר' : 'מנותק'}`;
+  if (on) { clearTimeout(downTimer); downTimer = null; $('#downStrip').hidden = true; $('#nextCard').classList.remove('stale'); }
+  else if (!downTimer) downTimer = setTimeout(() => { $('#downStrip').hidden = false; $('#nextCard').classList.add('stale'); }, 5000);
+}
 
 // ---------- תצוגה ----------
 function render() {
-  $('#title').innerHTML = `<span class="num">${S.team}</span>${S.event ? ` · <bdi>${esc(S.event.name)}</bdi>` : ''}`;
+  const evName = S.eventLabel || S.event?.name;
+  $('#title').innerHTML = evName ? `<bdi>${esc(evName)}</bdi>` : `קבוצה <span class="num">${esc(S.team)}</span>`;
   $('#meName').textContent = S.me.name;
   const n = S.next, c = $('#nextCard');
+  const staleCls = !$('#downStrip').hidden ? 'stale' : '';
   if (!n) {
-    c.className = 'card';
-    c.innerHTML = S.ours.length ? '<div class="label">🏁</div><div class="away">סיימנו את המשחקים באירוע</div>' : '<div class="away">עוד אין לוח משחקים</div><div class="muted">יופיע לבד כשיתפרסם</div>';
+    c.className = `next idle ${staleCls}`;
+    c.innerHTML = !S.event
+      ? '<div class="head"><span>המשחק הבא</span></div><div class="mid"><span class="label readout">עוד לא נמצא אירוע</span></div><div class="dim">הפיט יבחר את האירוע, והמשחקים יופיעו כאן.</div>'
+      : S.ours.length
+        ? '<div class="head"><span>סיימנו את כל המשחקים</span></div><div class="mid"><span class="label readout">הנחיתה הושלמה</span></div>'
+        : '<div class="head"><span>המשחק הבא</span></div><div class="mid"><span class="label readout">אין עדיין לוח משחקים</span></div><div class="dim">יופיע כאן לבד כשיתפרסם.</div>';
   } else {
-    c.className = `card ${n.color}`;
+    c.className = `next ${n.color} ${n.away === 0 ? 'now' : ''} ${staleCls}`;
     c.innerHTML = `
-      <div class="muted">המשחק הבא${n.time ? ' · ' + time(n.time) : ''}</div>
-      <div class="label num">${esc(n.label)}</div>
-      <div class="alli"><b>ברית ${colorName(n.color)}</b>${n.station ? ` · עמדה ${n.station}` : ''}</div>
-      <div class="away">${awayText(n.away)}</div>
+      <div class="head"><span>המשחק הבא</span>${n.time ? `<span>בשעה <b class="num">${time(n.time)}</b></span>` : ''}</div>
+      <div class="mid">
+        <span class="label readout num">${esc(n.label)}</span>
+        <div class="who"><span class="alli">${allianceName(n.color)}</span>${n.station ? `<span class="station">עמדה ${esc(n.station)}</span>` : ''}</div>
+      </div>
+      <div class="away">${n.away === 0 ? '<span class="readout">על המגרש עכשיו</span>' : `<span class="readout num">${esc(n.away)}</span><span>${n.away === 1 ? 'משחק לפנינו' : 'משחקים לפנינו'}</span>`}</div>
       <div class="sides">
         <div><small>איתנו</small><div class="teams">${teamsHtml([S.team, ...n.partners], n.color, S.team)}</div></div>
-        <div><small>יריבים</small><div class="teams">${teamsHtml(n.opponents, n.color === 'red' ? 'blue' : 'red')}</div></div>
+        <div><small>נגדנו</small><div class="teams">${teamsHtml(n.opponents, other(n.color))}</div></div>
       </div>`;
   }
-  $('#checklist').innerHTML = S.checklist.map((x, i) => `<li class="check ${x.done ? 'done' : ''}" data-i="${i}"><span class="box"></span><span>${esc(x.text)}</span></li>`).join('');
+  renderQueue();
+  const done = S.checklist.filter((x) => x.done).length;
+  $('#checkCount').textContent = `${done} מתוך ${S.checklist.length}`;
+  $('#checkCount').className = `tag ${S.checklist.length && done === S.checklist.length ? 'go' : ''}`;
+  $('#checklist').innerHTML = S.checklist.map((x, i) => `<li class="tick ${x.done ? 'done' : ''}" data-i="${i}" role="checkbox" aria-checked="${x.done}" tabindex="0"><span class="box"></span><span class="txt">${esc(x.text)}</span></li>`).join('');
+  const w = S.ours.filter((m) => m.result === 'W').length, l = S.ours.filter((m) => m.result === 'L').length;
+  const anyPlayed = S.ours.some((m) => m.played);
+  $('#record').textContent = anyPlayed ? `${plural(w, 'ניצחון אחד', 'ניצחונות')}, ${plural(l, 'הפסד אחד', 'הפסדים')}` : '';
+  $('#record').hidden = !anyPlayed;
   $('#matches').innerHTML = S.ours.map((m) => `
-    <li><b class="num" style="width:48px">${esc(m.label)}</b><span class="pill ${m.color}">${colorName(m.color)}</span>
-      <span style="flex:1"></span>
-      ${m.played ? `<b class="res" style="color:${m.result === 'W' ? 'var(--green)' : m.result === 'L' ? 'var(--red)' : 'var(--muted)'}">${{ W: 'ניצחון', L: 'הפסד', T: 'תיקו' }[m.result] || ''}</b> <span class="num muted">${m.our ?? ''}:${m.their ?? ''}</span>` : `<span class="muted">${awayText(m.away)}</span>`}</li>`).join('') || '<li class="empty">אין משחקים עדיין</li>';
+    <li class="${m.color} ${S.next && m.key === S.next.key ? 'is-next' : ''}"><span class="bar"></span><b class="lbl num">${esc(m.label)}</b>
+      <span class="grow dim small">${allianceName(m.color)}</span>
+      ${m.played ? `<span class="${m.result}">${RESULT[m.result] || ''}</span><span class="num dim">${esc(m.our ?? '')}:${esc(m.their ?? '')}</span>` : `<span class="dim">${awayText(m.away)}</span>`}</li>`).join('') || '<li class="empty">אין משחקים עדיין</li>';
 
-  // הודעות
-  const box = $('#msgs');
-  box.innerHTML = S.messages.map((m) => {
+  // הודעות: יורדים לסוף רק אם כבר היו בסוף
+  const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 80;
+  $('#msgs').innerHTML = S.messages.map((m) => {
     const mine = m.from === S.me.id;
-    const meta = mine ? `${time(m.at)} · ${m.readBy.includes('pit') ? 'נקרא ✓✓' : 'נשלח ✓'}` : `הפיט${m.to === 'all' ? ' · לכולם' : ''} · ${time(m.at)}`;
-    return `<div class="msg ${mine ? 'mine' : ''}">${esc(m.text)}<small>${meta}</small></div>`;
-  }).join('') || '<div class="empty">אין הודעות עדיין</div>';
+    return `<div class="msg ${mine ? 'mine' : ''}">${esc(m.text)}<div class="meta">${mine ? '' : `<span>הפיט${m.to === 'all' ? ', לכולם' : ''}</span>`}<span class="num">${time(m.at)}</span>${mine ? `<span>${m.readBy.includes('pit') ? 'נקראה' : 'נשלחה'}</span>` : ''}</div></div>`;
+  }).join('') || '<div class="empty">אין הודעות עדיין. מה שהפיט כותב יופיע כאן.</div>';
   const unread = S.messages.filter((m) => m.from !== S.me.id && !m.readBy.includes(S.me.id)).map((m) => m.id);
   $('#badge').hidden = !unread.length || tab === 'chat';
   $('#badge').textContent = unread.length;
-  if (tab === 'chat') { window.scrollTo(0, document.body.scrollHeight); if (unread.length) api('/api/read', { ids: unread }); }
+  if (tab === 'chat') { if (atBottom) window.scrollTo(0, document.body.scrollHeight); if (unread.length) api('/api/read', { ids: unread }).catch(() => {}); }
 
-  const BS = { charging: 'בטעינה', ready: 'מוכנה', robot: 'ברובוט', used: 'משומשת' };
-  $('#batteries').innerHTML = S.batteries.map((b) => `
-    <div class="bcard ${b.status}"><b>${esc(b.name)}</b><small class="muted">${b.uses} שימושים${b.voltage ? ` · <span class="num">${b.voltage}V</span>` : ''}</small>
-      <select data-batt="${b.id}" style="width:auto">${Object.entries(BS).map(([k, v]) => `<option value="${k}" ${k === b.status ? 'selected' : ''}>${v}</option>`).join('')}</select></div>`).join('') || '<div class="empty">אין סוללות. מוסיפים אותן ממסך הפיט.</div>';
-  $('#repairs').innerHTML = S.repairs.map((r) => `<li class="check ${r.done ? 'done' : ''}" data-repair="${r.id}"><span class="box"></span><span>${esc(r.text)}<br><small class="muted">${esc(r.by)} · ${time(r.at)}</small></span></li>`).join('') || '<li class="empty">אין תיקונים פתוחים</li>';
+  // סוללות: לא מציירים מחדש בזמן שבוחרים מצב, כדי שהרשימה הפתוחה לא תיסגר
+  if (!document.activeElement?.matches?.('select[data-batt]')) {
+    const BS = { charging: 'בטעינה', ready: 'מוכנה', robot: 'ברובוט', used: 'משומשת' };
+    $('#batteries').innerHTML = S.batteries.map((b) => `
+      <div class="bat ${b.status}"><span class="info"><b>${esc(b.name)}</b><span class="meta"><span>${BS[b.status]}</span><span>${uses(b.uses)}</span>${b.voltage ? `<span><span class="num">${esc(b.voltage)}</span> וולט</span>` : ''}</span></span>
+        <button class="step" data-bstep="${b.id}" data-to="${BSTEP[b.status][0]}">${BSTEP[b.status][1]}</button>
+        <select data-batt="${b.id}" aria-label="מצב אחר ל${esc(b.name)}"><option value="" selected>⋯</option>${Object.entries(BS).filter(([k]) => k !== b.status).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></div>`).join('') || '<div class="empty">אין סוללות. מוסיפים אותן ממסך הפיט.</div>';
+  }
+  $('#repairs').innerHTML = S.repairs.map((r) => `<li class="tick ${r.done ? 'done' : ''}" data-repair="${r.id}" role="checkbox" aria-checked="${r.done}" tabindex="0"><span class="box"></span><span class="txt">${esc(r.text)}<span class="who">${esc(r.by)}, ${Pit.ago(r.at)}</span></span></li>`).join('') || '<li class="empty">אין תיקונים פתוחים</li>';
 
-  if (S.me.alert?.state === 'ringing' && !ringing) ring(true, S.me.alert.reason);
-  if (S.me.alert?.state !== 'ringing' && ringing) ring(false);
+  const st = S.me.alert?.state;
+  if (st === 'ringing' && !ringing) ring(true, S.me.alert.reason);
+  if (st !== 'ringing' && ringing && !testing) ring(false);
+  $('#missedStrip').hidden = st !== 'missed' || ringing;
 }
 
+// תזכורת תור בטלפון: פס בראש המסך ורטט אחד, בלי מסך אדום
+function renderQueue() {
+  const n = S.next;
+  const on = n && S.queueWarnAt != null && n.away <= S.queueWarnAt;
+  $('#queueStrip').hidden = !on;
+  if (!on) return;
+  $('#queueText').textContent = `${n.away === 0 ? 'על המגרש עכשיו' : `לתור: ${awayText(n.away)}`}. משחק ${n.label}, ${allianceName(n.color)}`;
+  const stage = `${n.key}:${n.away === 0 ? 'field' : 'queue'}`;
+  if (queueWarned !== stage) { queueWarned = stage; navigator.vibrate?.([300, 150, 300]); notify(`${$('#queueText').textContent}`); }
+}
 
 // ---------- צלצול ----------
-let ringing = false, vibTimer = null, stopTimer = null;
-function ring(on, reason) {
+let ringing = false, testing = false, vibTimer = null, stopTimer = null, testTimer = null;
+function ring(on, reason, isTest = false) {
   if (NATIVE) return; // באפליקציה הצלצול והמסך האדום הם של האפליקציה
+  if (!on && !ringing) return;
   ringing = on;
+  testing = on && isTest;
+  clearTimeout(testTimer);
   $('#alarm').classList.toggle('show', on);
   clearInterval(vibTimer); clearTimeout(stopTimer);
   Pit.alarm(on);
   if (!on) { navigator.vibrate?.(0); return; }
-  $('#alarmReason').textContent = reason && reason !== 'בוא לפיט עכשיו!' ? reason : (S?.next ? `משחק ${S.next.label} · ${awayText(S.next.away)}` : '');
+  // הסיבה היא השורה הגדולה. בלי סיבה: לפיט, עכשיו.
+  $('#alarmReason').textContent = reason && reason !== 'בוא לפיט עכשיו!' ? reason : 'לפיט, עכשיו!';
+  $('#ackState').textContent = '';
+  $('#ackBtn').disabled = false;
+  $('#alarmNote').textContent = isTest ? 'זו רק בדיקה. הצלצול ייעצר לבד.' : 'הצלצול ייעצר לבד אחרי שתי דקות';
+  $('#ackBtn').focus();
   const vib = () => navigator.vibrate?.([700, 300, 700, 300, 700]);
   vib(); vibTimer = setInterval(vib, 3000);
   stopTimer = setTimeout(() => { Pit.alarm(false); clearInterval(vibTimer); }, 120_000);
-  notify('יש לנו בעיה. בוא לפיט עכשיו!', true);
+  if (!isTest) notify('יש לנו בעיה. לפיט, עכשיו!', true);
 }
-$('#ackBtn').onclick = async () => { ring(false); try { await api('/api/ack', {}); } catch {} load(); };
 
-// ---------- התראות מערכת (עובד רק בחיבור מאובטח) ----------
+// "קיבלתי" נשלח עד שהפיט מאשר. המסך האדום נסגר רק אחרי שהפיט קיבל.
+async function sendAck() {
+  if (testing) return ring(false);
+  $('#ackBtn').disabled = true;
+  Pit.alarm(false); clearInterval(vibTimer); navigator.vibrate?.(0);
+  for (let i = 0; i < 6; i++) {
+    $('#ackState').textContent = i ? 'אין חיבור לפיט. מנסה שוב…' : 'שולח לפיט…';
+    try { await api('/api/ack', {}); ring(false); $('#missedStrip').hidden = true; load(); return; }
+    catch (e) { if (e.status === 401 || e.status === 403) break; await new Promise((r) => setTimeout(r, 1000 * Math.min(4, i + 1))); }
+  }
+  $('#ackState').textContent = 'הפיט לא קיבל את התשובה. לוחצים שוב, או הולכים לפיט.';
+  $('#ackBtn').disabled = false;
+}
+$('#ackBtn').onclick = sendAck;
+$('#missedAck').onclick = () => { api('/api/ack', {}).then(() => { $('#missedStrip').hidden = true; load(); }).catch(() => Pit.toast('לא נשלח. אין חיבור לפיט.')); };
+
+// ---------- התראות מערכת (רק בחיבור מאובטח) ----------
 let swReg = null;
-if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('sw.js').then((r) => (swReg = r)).catch(() => {});
+if ('serviceWorker' in navigator && window.isSecureContext && !window.HoustonSim) navigator.serviceWorker.register('sw.js').then((r) => (swReg = r)).catch(() => {});
 function notify(body, urgent) {
   if (!('Notification' in window) || Notification.permission !== 'granted' || document.visibilityState === 'visible') return;
   const opts = { body, tag: urgent ? 'pit-alert' : 'pit-msg', renotify: true, requireInteraction: !!urgent, vibrate: [700, 300, 700, 300, 700], icon: 'logo.svg' };
@@ -266,16 +405,19 @@ function notify(body, urgent) {
 }
 function updateMeTab() {
   const n = 'Notification' in window ? Notification.permission : 'none';
-  $('#notifBtn').textContent = n === 'granted' ? 'פעילות ✓' : n === 'denied' ? 'חסומות' : n === 'none' ? 'לא נתמך' : 'אפשר';
-  $('#notifBtn').disabled = n !== 'default';
-  $('#wakeBtn').textContent = wake ? 'פעיל ✓' : 'הפעל';
+  $('#notifState').innerHTML = n === 'granted' ? '<span class="tag go">פעילות</span>'
+    : n === 'denied' ? '<span class="tag red">חסומות בהגדרות הדפדפן</span>'
+    : n === 'none' || !window.isSecureContext ? '<span class="tag">לא זמינות כאן</span>'
+    : '<button id="notifBtn">הפעלה</button>';
+  $('#wakeBtn').textContent = wake ? 'פעיל' : 'הפעלה';
   $('#wakeBtn').disabled = !('wakeLock' in navigator);
   document.querySelectorAll('.web-only').forEach((el) => (el.hidden = !!NATIVE));
   if (NATIVE) return updateNative();
   const tips = [];
-  if (!window.isSecureContext) tips.push('החיבור לא מאובטח, לכן התראות מערכת ונעילת מסך דלוק לא זמינות. כדי שהצלצול יגיע, השאירו את הדף פתוח בחזית.');
-  if (/iPhone|iPad/.test(navigator.userAgent)) tips.push('באייפון אין רטט מהדפדפן. הוסיפו את הדף למסך הבית לחוויה טובה יותר.');
-  tips.push('כדי לא לפספס קריאה: השאירו את הדף פתוח והפעילו "להשאיר את המסך דלוק".');
+  if (!window.isSecureContext) tips.push('החיבור לא מאובטח, ולכן אין התראות מערכת ואין "מסך דלוק". כדי שהצלצול יגיע, משאירים את הדף פתוח מולך.');
+  if (/iPhone|iPad/.test(navigator.userAgent)) tips.push('באייפון אין רטט מהדפדפן. כדאי להוסיף את הדף למסך הבית.');
+  tips.push('כדי לא לפספס קריאה: משאירים את הדף פתוח ומפעילים "להשאיר את המסך דלוק". באנדרואיד עדיף לבקש מהקפטן את אפליקציית יוסטון, שמצלצלת גם במצב שקט.');
+  $('#tip').className = 'tip warn';
   $('#tip').innerHTML = tips.map(esc).join('<br><br>');
 }
 function updateNative() {
@@ -283,64 +425,74 @@ function updateNative() {
   try { st = JSON.parse(NATIVE.status()); } catch {}
   const rows = [
     ['notifications', 'התראות'],
+    ['channel', 'צליל לקריאות מהפיט'],
     ['fullScreen', 'מסך אדום מעל מסך נעול'],
     ['battery', 'בלי חיסכון סוללה ליוסטון'],
-  ];
+  ].filter(([k]) => k in st);
   $('#nativeList').hidden = false;
-  $('#nativeList').innerHTML = rows.map(([k, t]) => `<li><span>${t}</span>${st[k] ? '<b>✓</b>' : `<button data-fix="${k}">לתקן</button>`}</li>`).join('')
-    + `<li><span>חיבור ברקע</span><b>${st.connected ? 'מחובר ✓' : 'מתחבר…'}</b></li>`
-    + '<li><span>כתובת המחשב בפיט</span><button data-server>להחליף</button></li>';
-  const missing = rows.filter(([k]) => !st[k]).length;
-  $('#tip').innerHTML = esc(missing
-    ? 'כדי שהקריאה תגיע בכל מצב, צריך לאשר את מה שמסומן "לתקן". אחר כך לחזור לכאן.'
-    : 'הכול מוכן. קריאה מהפיט תצלצל גם במצב שקט, גם כשהמסך כבוי וגם כשהאפליקציה סגורה.');
+  $('#nativeList').innerHTML = rows.map(([k, t]) => `<li><span>${t}</span>${st[k] ? '<span class="tag go">מאושר</span>' : `<button class="go" data-fix="${k}">לתקן</button>`}</li>`).join('')
+    + (st.silentAll ? '<li><span>מצב "שקט מוחלט" מופעל</span><span class="tag red">גם שעון מעורר מושתק</span></li>' : '')
+    + `<li><span>חיבור ברקע</span>${st.connected ? '<span class="tag go">מחובר</span>' : '<span class="tag amber">מתחבר</span>'}</li>`
+    + '<li><span>כתובת המחשב בפיט</span><button data-server>החלפה</button></li>';
+  const missing = rows.filter(([k]) => !st[k]).length + (st.silentAll ? 1 : 0);
+  $('#tip').className = `tip ${missing ? 'warn' : 'ok'}`;
+  $('#tip').textContent = missing
+    ? 'כדי שהקריאה תגיע בכל מצב, מאשרים את כל מה שמסומן "לתקן", וחוזרים לכאן.'
+    : 'הכול מוכן. קריאה מהפיט תצלצל גם במצב שקט, גם כשהמסך כבוי וגם כשהאפליקציה סגורה.';
 }
 $('#nativeList').onclick = (e) => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.fix) NATIVE.fix(b.dataset.fix);
   if (b.dataset.server !== undefined) NATIVE.changeServer();
 };
-$('#notifBtn').onclick = async () => { await Notification.requestPermission(); updateMeTab(); };
+document.addEventListener('click', async (e) => { if (e.target.id === 'notifBtn') { await Notification.requestPermission(); updateMeTab(); } });
 $('#wakeBtn').onclick = async () => {
   $('#wakeBtn').dataset.want = '1';
   try { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; updateMeTab(); }); } catch { Pit.toast('לא הצלחתי להשאיר את המסך דלוק'); }
   updateMeTab();
 };
 document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState === 'visible') { if (tab === 'me') updateMeTab(); load(); if (wake === null && $('#wakeBtn').dataset.want) $('#wakeBtn').click(); }
+  if (document.visibilityState === 'visible') { if (tab === 'me') updateMeTab(); if (Pit.token) load(); if (wake === null && $('#wakeBtn').dataset.want) $('#wakeBtn').click(); }
 });
 $('#testBtn').onclick = () => {
   if (NATIVE) return NATIVE.testAlarm();
-  Pit.unlockAudio(); ring(true, 'בדיקת צלצול'); setTimeout(() => ring(false), 3000); };
-$('#logout').onclick = () => { Pit.setToken(null); showJoin(); };
+  if (ringing) return; // לא דורסים קריאה אמיתית
+  Pit.unlockAudio(); ring(true, 'בדיקת צלצול', true);
+  testTimer = setTimeout(() => { if (testing) ring(false); }, 3000);
+};
+$('#logout').onclick = () => { if (confirm('להתנתק? לא יגיעו קריאות לטלפון הזה.')) { Pit.setToken(null); showJoin(); } };
 
 // ---------- פעולות ----------
+function go(name) {
+  tab = name;
+  document.querySelectorAll('nav button').forEach((b) => (b.dataset.go === tab ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current')));
+  document.querySelectorAll('[data-tab]').forEach((s) => (s.hidden = s.dataset.tab !== tab));
+  if (tab === 'me') updateMeTab();
+  if (S) render();
+  window.scrollTo(0, tab === 'chat' ? document.body.scrollHeight : 0);
+}
 document.addEventListener('click', (e) => {
   Pit.unlockAudio();
-  const t = e.target.closest('[data-go],[data-i],[data-repair],[data-quick]');
+  const t = e.target.closest('[data-go],[data-i],[data-repair],[data-quick],[data-bstep]');
   if (!t) return;
-  if (t.dataset.quick) { api('/api/message', { text: t.dataset.quick }).then(load); Pit.toast('נשלח'); return; }
-  if (t.dataset.go) {
-    tab = t.dataset.go;
-    document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('on', b === t));
-    document.querySelectorAll('[data-tab]').forEach((s) => (s.hidden = s.dataset.tab !== tab));
-    if (tab === 'me') updateMeTab();
-    if (S) render();
-    if (tab !== 'chat') window.scrollTo(0, 0);
-    return;
-  }
-  if (t.dataset.i !== undefined) { const c = S.checklist[t.dataset.i]; c.done = !c.done; render(); api('/api/check', { index: Number(t.dataset.i), done: c.done }); return; }
-  if (t.dataset.repair) api('/api/repair', { action: 'toggle', id: t.dataset.repair }).then(load);
+  if (t.dataset.quick) { api('/api/message', { text: t.dataset.quick }).then(() => { Pit.toast('נשלחה לפיט'); load(); }).catch(() => Pit.toast('לא נשלחה. אין חיבור לפיט.')); return; }
+  if (t.dataset.go) return go(t.dataset.go);
+  if (t.dataset.bstep) { api('/api/battery', { action: 'status', id: t.dataset.bstep, status: t.dataset.to }).then(load).catch(() => Pit.toast('לא עודכן. אין חיבור לפיט.')); return; }
+  if (t.dataset.i !== undefined) { const c = S.checklist[t.dataset.i]; c.done = !c.done; render(); api('/api/check', { index: Number(t.dataset.i), done: c.done }).catch(load); return; }
+  if (t.dataset.repair) api('/api/repair', { action: 'toggle', id: t.dataset.repair }).then(load).catch(() => {});
+});
+document.addEventListener('keydown', (e) => {
+  if ((e.key === ' ' || e.key === 'Enter') && e.target.matches('.tick')) { e.preventDefault(); e.target.click(); }
 });
 document.addEventListener('change', (e) => {
   const id = e.target.dataset.batt;
-  if (id) api('/api/battery', { action: 'status', id, status: e.target.value }).then(load);
+  if (id && e.target.value) { e.target.blur(); api('/api/battery', { action: 'status', id, status: e.target.value }).then(load).catch(() => Pit.toast('לא עודכן. אין חיבור לפיט.')); }
 });
-$('#sendForm').onsubmit = (e) => { e.preventDefault(); const text = $('#sendText').value.trim(); if (!text) return; $('#sendText').value = ''; api('/api/message', { text }).then(load); };
-$('#repairForm').onsubmit = (e) => { e.preventDefault(); const text = $('#repairText').value.trim(); if (!text) return; $('#repairText').value = ''; api('/api/repair', { action: 'add', text }).then(load); };
+$('#sendForm').onsubmit = (e) => { e.preventDefault(); const text = $('#sendText').value.trim(); if (!text) return; $('#sendText').value = ''; api('/api/message', { text }).then(() => { load().then(() => window.scrollTo(0, document.body.scrollHeight)); }).catch(() => { $('#sendText').value = text; Pit.toast('לא נשלחה. אין חיבור לפיט.'); }); };
+$('#repairForm').onsubmit = (e) => { e.preventDefault(); const text = $('#repairText').value.trim(); if (!text) return; $('#repairText').value = ''; api('/api/repair', { action: 'add', text }).then(load).catch(() => { $('#repairText').value = text; }); };
 
 // גיבוי למקרה שהחיבור החי נופל
-setInterval(() => { if (Pit.token && document.visibilityState === 'visible') load(); }, 15_000);
+setInterval(() => { if (Pit.token && S && document.visibilityState === 'visible') load(); }, 15_000);
 
 if (Pit.token) start(); else showJoin();
 </script>

@@ -37,10 +37,12 @@ import org.json.JSONObject;
 public class MainActivity extends Activity {
     static volatile boolean visible = false;
 
-    private static final int BG = Color.rgb(0x0B, 0x0E, 0x14);
-    private static final int ACCENT = Color.rgb(0xFF, 0xB0, 0x20);
+    private static final int BG = Color.rgb(0x16, 0x1B, 0x19);
+    private static final int ACCENT = Color.rgb(0xF2, 0xA9, 0x00);
 
     private WebView web;
+    /** הכתובת של הדף שפתוח עכשיו. הגישה לאפליקציה מותרת רק לדפים מהמחשב בפיט. */
+    private volatile String pageOrigin = "";
 
     @Override
     protected void onCreate(Bundle b) {
@@ -48,6 +50,7 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);
         Alarm.channels(this);
+        Net.watch(this, null);
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[] { Manifest.permission.POST_NOTIFICATIONS }, 1);
         }
@@ -56,10 +59,22 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onResume() { super.onResume(); visible = true; }
+    protected void onResume() {
+        super.onResume();
+        visible = true;
+        if (web != null) web.onResume();
+        // קריאה שמצלצלת עכשיו: המסך האדום תמיד זמין, גם אם ההתראות כבויות
+        if (Alarm.ringing) {
+            try { startActivity(new Intent(this, AlarmActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)); } catch (Exception ignored) {}
+        }
+    }
 
     @Override
-    protected void onPause() { visible = false; super.onPause(); }
+    protected void onPause() {
+        visible = false;
+        if (web != null) web.onPause();
+        super.onPause();
+    }
 
     @Override
     public void onBackPressed() {
@@ -78,8 +93,8 @@ public class MainActivity extends Activity {
         root.setPadding(p, dp(56), p, p);
 
         TextView title = label("יוסטון", 34, Color.WHITE, true);
-        TextView sub = label("ניהול הפיט של אפולו 9662", 16, Color.rgb(0x9A, 0xA4, 0xB8), false);
-        TextView help = label("הכתובת מופיעה במסך הפיט, בחלון \"הגדרות וחיבור טלפונים\". למשל:\n192.168.1.20:8765", 16, Color.rgb(0xC8, 0xCF, 0xDC), false);
+        TextView sub = label("מרכז הבקרה של הפיט, אפולו 9662", 16, Color.rgb(0x9A, 0xA6, 0x9F), false);
+        TextView help = label("הכתובת מופיעה במסך הפיט, בחלון \"חיבור טלפונים והגדרות\". למשל:\n192.168.1.20:8765", 16, Color.rgb(0xE8, 0xEE, 0xE4), false);
 
         EditText addr = new EditText(this);
         addr.setHint("כתובת המחשב בפיט");
@@ -87,7 +102,7 @@ public class MainActivity extends Activity {
         addr.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
         addr.setTextDirection(View.TEXT_DIRECTION_LTR);
         addr.setTextColor(Color.WHITE);
-        addr.setHintTextColor(Color.rgb(0x6B, 0x75, 0x8A));
+        addr.setHintTextColor(Color.rgb(0x6F, 0x7B, 0x75));
         addr.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
 
         TextView err = label(error == null ? "" : error, 15, Color.rgb(0xFF, 0x8A, 0x8A), false);
@@ -97,7 +112,7 @@ public class MainActivity extends Activity {
         go.setAllCaps(false);
         go.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
         go.setTypeface(Typeface.DEFAULT_BOLD);
-        go.setTextColor(Color.rgb(0x1A, 0x12, 0x00));
+        go.setTextColor(Color.rgb(0x24, 0x1A, 0x00));
         go.setBackgroundColor(ACCENT);
         go.setOnClickListener(v -> {
             String[] parsed = Prefs.parse(addr.getText().toString());
@@ -108,6 +123,7 @@ public class MainActivity extends Activity {
                 AlertService.stop(this);
             }
             Prefs.setBase(this, parsed[0]);
+            Net.bind(this);
             openApp(parsed[1]);
         });
 
@@ -136,10 +152,25 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new Bridge(), "HoustonAndroid");
         web.setWebViewClient(new WebViewClient() {
             @Override
+            public void onPageStarted(WebView v, String url, android.graphics.Bitmap icon) { pageOrigin = originOf(Uri.parse(url)); }
+
+            @Override
+            public void doUpdateVisitedHistory(WebView v, String url, boolean reload) { pageOrigin = originOf(Uri.parse(url)); }
+
+            @Override
+            public android.webkit.WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
+                // מסגרת מאתר אחר לא נטענת בתוך האפליקציה
+                if (!r.isForMainFrame() && "document".equals(r.getRequestHeaders().get("Sec-Fetch-Dest"))
+                        && !base.equals(originOf(r.getUrl()))) {
+                    return new android.webkit.WebResourceResponse("text/plain", "utf-8", 403, "blocked", null, null);
+                }
+                return null;
+            }
+
+            @Override
             public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
                 Uri u = r.getUrl();
-                String origin = u.getScheme() + "://" + u.getHost() + (u.getPort() > 0 ? ":" + u.getPort() : "");
-                if (origin.equals(base)) return false;
+                if (originOf(u).equals(base)) return false;
                 // קישור חיצוני נפתח בדפדפן, לא בתוך האפליקציה
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) {}
                 return true;
@@ -156,17 +187,32 @@ public class MainActivity extends Activity {
         AlertService.startIfReady(this);
     }
 
+    static String originOf(Uri u) {
+        if (u == null || u.getScheme() == null || u.getHost() == null) return "";
+        String scheme = u.getScheme().toLowerCase(java.util.Locale.ROOT);
+        int port = u.getPort();
+        if ((port == 80 && scheme.equals("http")) || (port == 443 && scheme.equals("https"))) port = -1;
+        return scheme + "://" + u.getHost().toLowerCase(java.util.Locale.ROOT) + (port > 0 ? ":" + port : "");
+    }
+
+    /** הדף שמבקש הוא באמת מהמחשב בפיט? */
+    private boolean trusted() {
+        String b = Prefs.base(this);
+        return !b.isEmpty() && originOf(Uri.parse(b)).equals(pageOrigin);
+    }
+
     /** מה שדף הטלפון יכול לבקש מהאפליקציה. נגיש רק לדפים מהשרת בפיט. */
     private class Bridge {
         @JavascriptInterface
         public void setSession(String token) {
-            if (token == null || token.isEmpty()) return;
+            if (!trusted() || token == null || token.isEmpty()) return;
             Prefs.setToken(MainActivity.this, token);
             AlertService.startIfReady(MainActivity.this);
         }
 
         @JavascriptInterface
         public void clearSession() {
+            if (!trusted()) return;
             Prefs.setToken(MainActivity.this, "");
             AlertService.stop(MainActivity.this);
             Alarm.stop(MainActivity.this);
@@ -174,11 +220,14 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void testAlarm() {
+            if (!trusted()) return;
+            if (Alarm.ringing && !Alarm.test) return; // לא דורסים קריאה אמיתית
             Alarm.start(MainActivity.this, "בדיקת צלצול", true);
         }
 
         @JavascriptInterface
         public void changeServer() {
+            if (!trusted()) return;
             runOnUiThread(() -> showSetup(null));
         }
 
@@ -190,6 +239,16 @@ public class MainActivity extends Activity {
                 NotificationManager nm = getSystemService(NotificationManager.class);
                 PowerManager pm = getSystemService(PowerManager.class);
                 o.put("notifications", nm.areNotificationsEnabled());
+                android.app.NotificationChannel ch = nm.getNotificationChannel(Alarm.CH_ALARM);
+                o.put("channel", ch == null || ch.getImportance() >= NotificationManager.IMPORTANCE_HIGH);
+                int f = nm.getCurrentInterruptionFilter();
+                boolean silent = f == NotificationManager.INTERRUPTION_FILTER_NONE;
+                try {
+                    // "נא לא להפריע" עם עדיפות, כשהשעון המעורר לא ברשימת החריגים
+                    if (f == NotificationManager.INTERRUPTION_FILTER_PRIORITY
+                            && (nm.getNotificationPolicy().priorityCategories & NotificationManager.Policy.PRIORITY_CATEGORY_ALARMS) == 0) silent = true;
+                } catch (Exception ignored) {}
+                o.put("silentAll", silent);
                 o.put("fullScreen", Build.VERSION.SDK_INT < 34 || nm.canUseFullScreenIntent());
                 o.put("battery", pm.isIgnoringBatteryOptimizations(getPackageName()));
                 o.put("connected", AlertService.connected);
@@ -199,10 +258,15 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void fix(String what) {
+            if (!trusted()) return;
             runOnUiThread(() -> {
                 try {
                     Intent i;
-                    if ("battery".equals(what)) {
+                    if ("channel".equals(what)) {
+                        i = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                                .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName())
+                                .putExtra(Settings.EXTRA_CHANNEL_ID, Alarm.CH_ALARM);
+                    } else if ("battery".equals(what)) {
                         i = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + getPackageName()));
                     } else if ("fullScreen".equals(what) && Build.VERSION.SDK_INT >= 34) {
                         i = new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:" + getPackageName()));

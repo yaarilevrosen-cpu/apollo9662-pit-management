@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>סימולטור יוסטון</title>
+<link rel="icon" href="__LOGO__">
+<style>
+/*__FONTS__*/
+/*__COMMON_CSS__*/
+  body { min-height: 100vh; }
+  .shell { max-width: 1500px; margin: 0 auto; padding: 18px 22px 40px; display: grid; gap: 16px; }
+  .intro { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .intro img { width: 46px; height: 46px; }
+  .intro h1 { font-family: var(--display); font-size: 64px; line-height: .85; margin: 0; font-weight: 700; }
+  .intro p { margin: 0; color: var(--dim); max-width: 62ch; }
+  .intro .txt { display: grid; gap: 4px; flex: 1; min-width: 260px; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; background: var(--well); border-radius: var(--r-module); padding: 10px 14px; position: sticky; top: 0; z-index: 5; }
+  .controls .grp { display: flex; gap: 6px; align-items: center; }
+  .controls .grp > span { color: var(--dim); font-size: 14px; margin-inline-end: 4px; }
+  .controls button[aria-pressed="true"] { background: var(--well); box-shadow: inset 0 0 0 2px var(--phosphor); font-weight: 600; }
+  .controls .grow { flex: 1; }
+
+  .screen { position: relative; overflow: hidden; border-radius: var(--r-module); background: var(--console); }
+  .screen iframe { position: absolute; top: 0; right: 0; transform-origin: top right; border: 0; display: block; background: var(--console); }
+  .screen.off::after { content: "אין רשת"; position: absolute; inset: 0; display: grid; place-items: center; background: #161b19cc; font-family: var(--display); font-size: 44px; color: var(--amber); pointer-events: none; }
+
+  .laptop { border: 10px solid #0f1311; border-bottom-width: 14px; border-radius: 14px; background: #0f1311; }
+  .laptop .screen { border-radius: 4px; }
+  .cap { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .cap b { font-family: var(--display); font-size: 30px; font-weight: 700; line-height: 1; }
+  .cap .grow { flex: 1; }
+  .cap button { min-height: 32px; padding: 3px 10px; font-size: 13.5px; }
+
+  .stage { display: grid; gap: 16px; }
+  .lower { display: grid; grid-template-columns: minmax(0, 3fr) minmax(280px, 1fr); gap: 16px; align-items: start; }
+  .phones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  /* מסך רחב: הטלפונים ליד המחשב, כדי לראות קריאה ותשובה באותו מבט */
+  @media (min-width: 1400px) {
+    .shell { max-width: 1760px; }
+    .stage { grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.25fr); grid-template-rows: auto 1fr; align-items: start; }
+    .lower { display: contents; }
+    .phones { grid-column: 2; grid-row: 1 / span 2; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .phones .phone:nth-child(3) { grid-column: 1 / -1; width: 50%; margin-inline: auto; }
+    .side { grid-column: 1; grid-row: 2; position: static; grid-template-columns: 1fr 1fr; align-self: start; }
+    .side .module { max-height: 420px; }
+  }
+  .narrow-note, .cap .call-from-pit { display: none; }
+  .phone .body { border: 8px solid #0f1311; border-radius: 30px; background: #0f1311; padding: 10px 0 12px; }
+  .phone .screen { border-radius: 4px; }
+
+  .side { display: grid; gap: 16px; position: sticky; top: 76px; }
+  .side .module { max-height: 46vh; overflow: auto; }
+  #log, #tests { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; font-size: 14px; }
+  #log li { display: grid; grid-template-columns: auto 1fr; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--rule-soft); }
+  #log .t { color: var(--faint); font-size: 12.5px; padding-top: 1px; }
+  #log li.signal span:last-child { color: #ff9aa1; }
+  #log li.go span:last-child { color: #9ef0c0; }
+  #log li.amber span:last-child { color: #ffd36b; }
+  #tests li { display: flex; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--rule-soft); }
+  #tests li.fail { color: #ff9aa1; }
+  .hint { color: var(--dim); font-size: 14px; margin: 0 0 8px; }
+
+  @media (max-width: 1100px) { .lower { grid-template-columns: 1fr; } .side { position: static; } }
+  @media (max-width: 720px) {
+    .laptop-sec { display: none; }
+    .cap .call-from-pit { display: inline-flex; }
+    .narrow-note { display: block; background: var(--well); border-radius: var(--r-module); padding: 12px 14px; color: var(--dim); }
+    .phones { grid-template-columns: 1fr; max-width: 380px; margin: 0 auto; width: 100%; }
+    .intro h1 { font-size: 48px; }
+    .controls { position: static; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="intro">
+    <img src="__LOGO__" alt="">
+    <div class="txt">
+      <h1>סימולטור יוסטון</h1>
+      <p>מסך הפיט ושלושה טלפונים של הצוות, מחוברים לאותו שרת ופועלים בדיוק כמו בתחרות. אפשר ללחוץ בכל מסך. הקבוצות, השמות והתוצאות בדויים.</p>
+    </div>
+  </div>
+
+  <div class="controls" role="toolbar" aria-label="שליטה בסימולציה">
+    <div class="grp" role="group" aria-label="קצב המשחקים"><span>משחקים</span>
+      <button data-speed="0" aria-pressed="false">עצירה</button>
+      <button data-speed="25" aria-pressed="true">רגיל</button>
+      <button data-speed="8" aria-pressed="false">מהיר</button>
+    </div>
+    <button id="nextBtn">המשחק הבא נגמר</button>
+    <button id="autoBtn" aria-pressed="true">חברי הצוות עונים לבד</button>
+    <button id="muteBtn" aria-pressed="false">הפעלת צלילים</button>
+    <span class="grow"></span>
+    <button id="testBtn">הרצת בדיקה עצמית</button>
+  </div>
+
+  <p class="narrow-note">מסך הפיט קטן מדי לטלפון, ולכן מוסתר כאן. פותחים את הדף במחשב כדי לראות את שניהם יחד.</p>
+  <div class="stage">
+  <section class="laptop-sec">
+    <div class="cap"><b>המחשב בפיט</b><span class="dim small">מה שרואים על המסך הגדול</span></div>
+    <div class="laptop"><div class="screen"><iframe data-sim="pit" title="מסך הפיט" width="1366" height="768"></iframe></div></div>
+  </section>
+
+  <div class="lower">
+    <div class="phones">
+      <div class="phone">
+        <div class="cap"><b>נועה</b><span class="grow"></span><button class="call call-from-pit" data-call="p1">קריאה מהפיט</button><button data-net="p1" aria-pressed="false">ניתוק מהרשת</button></div>
+        <div class="body"><div class="screen"><iframe data-sim="p1" title="הטלפון של נועה" width="390" height="780"></iframe></div></div>
+      </div>
+      <div class="phone">
+        <div class="cap"><b>עומר</b><span class="grow"></span><button class="call call-from-pit" data-call="p2">קריאה מהפיט</button><button data-net="p2" aria-pressed="false">ניתוק מהרשת</button></div>
+        <div class="body"><div class="screen"><iframe data-sim="p2" title="הטלפון של עומר" width="390" height="780"></iframe></div></div>
+      </div>
+      <div class="phone">
+        <div class="cap"><b>תמר</b><span class="grow"></span><button class="call call-from-pit" data-call="p3">קריאה מהפיט</button><button data-net="p3" aria-pressed="false">ניתוק מהרשת</button></div>
+        <div class="body"><div class="screen"><iframe data-sim="p3" title="הטלפון של תמר" width="390" height="780"></iframe></div></div>
+      </div>
+    </div>
+
+    <div class="side">
+      <section class="module">
+        <header><h2>בדיקה עצמית</h2><span class="tag" id="testSum">לא הורצה</span></header>
+        <p class="hint">בוטים שעוברים על המערכת דרך המסכים עצמם: מצטרפים, קוראים, עונים, כותבים ומנתקים, ובודקים שכל מסך רואה את מה שצריך.</p>
+        <ul id="tests"></ul>
+      </section>
+      <section class="module">
+        <header><h2>מה קורה עכשיו</h2></header>
+        <ul id="log" aria-live="polite"></ul>
+      </section>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script>window.SIM_FONTS = __FONTS_JSON__; window.SIM_PAGES = __PAGES_JSON__;</script>
+<script>
+/*__CORE__*/
+</script>
+<script>
+/*__HOST__*/
+</script>
+</body>
+</html>

@@ -17,8 +17,10 @@ import java.lang.ref.WeakReference;
 
 /** המסך האדום. נפתח גם מעל מסך נעול ומדליק את המסך. */
 public class AlarmActivity extends Activity {
-    private static WeakReference<AlarmActivity> current = new WeakReference<>(null);
+    private static volatile WeakReference<AlarmActivity> current = new WeakReference<>(null);
     private TextView reasonView;
+
+    static boolean isOpen() { return current.get() != null; }
 
     static void closeIfOpen() {
         AlarmActivity a = current.get();
@@ -36,21 +38,20 @@ public class AlarmActivity extends Activity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setGravity(Gravity.CENTER);
-        root.setBackgroundColor(Color.rgb(0xC8, 0x10, 0x2E));
+        root.setBackgroundColor(Color.rgb(0xE5, 0x34, 0x3F));
         int pad = dp(28);
         root.setPadding(pad, pad, pad, pad);
         root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
 
-        TextView title = text("יוסטון, יש לנו בעיה", 38, true);
-        TextView go = text("בוא לפיט עכשיו!", 24, true);
-        reasonView = text("", 22, false);
-        reasonView.setAlpha(0.9f);
+        TextView title = text("יוסטון, יש לנו בעיה", 24, true);
+        // הסיבה היא השורה הגדולה. בלי סיבה: לפיט, עכשיו!
+        reasonView = text(Alarm.DEFAULT_REASON, 54, true);
 
         Button ack = new Button(this);
         ack.setText("קיבלתי, בדרך!");
         ack.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
         ack.setTypeface(Typeface.DEFAULT_BOLD);
-        ack.setTextColor(Color.rgb(0x8A, 0x0A, 0x1F));
+        ack.setTextColor(Color.rgb(0x9E, 0x15, 0x20));
         ack.setAllCaps(false);
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(Color.WHITE);
@@ -60,11 +61,8 @@ public class AlarmActivity extends Activity {
         ack.setOnClickListener(v -> { Alarm.ack(this); finish(); });
 
         TextView note = text("הצלצול ייעצר לבד אחרי שתי דקות", 15, false);
-        note.setAlpha(0.8f);
 
         root.addView(title);
-        root.addView(space(14));
-        root.addView(go);
         root.addView(space(10));
         root.addView(reasonView);
         root.addView(space(36));
@@ -101,8 +99,7 @@ public class AlarmActivity extends Activity {
     private void show() {
         String r = Alarm.reason;
         boolean plain = r == null || r.isEmpty() || r.equals("בוא לפיט עכשיו!");
-        reasonView.setText(plain ? "" : r);
-        reasonView.setVisibility(plain ? View.GONE : View.VISIBLE);
+        reasonView.setText(plain ? Alarm.DEFAULT_REASON : r);
     }
 
     private TextView text(String s, int sp, boolean bold) {
